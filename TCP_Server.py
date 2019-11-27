@@ -38,6 +38,11 @@ class SelectorServer:
             self.closed = True
             logging.info('all connection closed & cleaned up\r\n')
 
+    def send_to_conn(self, peername, message):
+        for conn in self.conns:
+            if conn.getpeername() == peername:
+                conn.send(message.encode('utf-8'))
+
     def on_accept(self, sock, mask):
         # This is a handler for the main_socket which is now listening, so we
         # know it's ready to accept a new connection.
