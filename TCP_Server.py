@@ -1,29 +1,19 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 21 19:32:07 2019
-
-@author: Grzesiek-UC
-"""
-
 import logging
 import selectors
 import socket
-import time
-
-HOST = 'localhost'
-PORT = 21000
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
-
 class SelectorServer:
-    def __init__(self, host, port):
+    def __init__(self, greetings, host, port):
         # Create the main socket that accepts incoming connections and start
         # listening. The socket is nonblocking.
         self.main_socket = socket.socket()
         self.main_socket.bind((host, port))
         self.main_socket.listen(100)
         self.main_socket.setblocking(False)
+        self.greetings = greetings
+        self.closed = False
 
         # Create the selector object that will dispatch events. Register
         # interest in read events, that include incoming connections.
@@ -39,11 +29,14 @@ class SelectorServer:
         self.current_peers = {}
         self.conns = []
         self.current_number_of_peers = 0
+        self.__peerData = {}
         
     def close(self):
             for conn in self.conns:
                 self.close_connection(conn)
             self.main_socket.close()
+            self.closed = True
+            logging.info('all connection closed & cleaned up\r\n')
 
     def on_accept(self, sock, mask):
         # This is a handler for the main_socket which is now listening, so we
@@ -51,8 +44,7 @@ class SelectorServer:
         conn, addr = self.main_socket.accept()
         logging.info('accepted connection from {0}'.format(addr))
         conn.setblocking(False)
-        greetings = '---<<<CaptureTheNetwork>>>---Battle Server\r\n'
-        conn.send(greetings.encode('utf-8'))
+        conn.send(self.greetings.encode('utf-8'))
 
         self.current_peers[conn.fileno()] = conn.getpeername()
         self.conns.append(conn)
@@ -65,6 +57,8 @@ class SelectorServer:
         # We can't ask conn for getpeername() here, because the peer may no
         # longer exist (hung up); instead we use our own mapping of socket
         # fds to peer names - our socket fd is still open.
+        if self.current_peers.get(conn.fileno(), 'NA') == 'NA':
+            return
         peername = self.current_peers[conn.fileno()]
         logging.info('closing connection to {0}'.format(peername))
         del self.current_peers[conn.fileno()]
@@ -80,12 +74,16 @@ class SelectorServer:
             if data:
                 peername = conn.getpeername()
                 logging.info('got data from {}: {!r}'.format(peername, data))
+                self.__peerData[peername] = data.decode('utf-8')
                 # Assume for simplicity that send won't block
-                conn.send(data)
+                #conn.send(data)
             else:
                 self.close_connection(conn)
         except ConnectionResetError:
             self.close_connection(conn)
+    
+    def getData(self):
+        return self.__peerData
 
     def serve_forever(self):
         #last_report_time = time.time()
@@ -109,14 +107,4 @@ class SelectorServer:
                 logging.info('Num active peers = {0}'.format(
                     len(self.current_peers)))
                 #last_report_time = cur_time
-
-
-if __name__ == '__main__':
-    logging.info('starting')
-    server = SelectorServer(host=HOST, port=PORT)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    server.close()
             
