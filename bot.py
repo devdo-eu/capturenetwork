@@ -4,14 +4,13 @@ import rules
 
 
 class Bot:
-    def __init__(self, conn, iden, name, server):
+    def __init__(self, conn, iden, name):
         self.__id = iden
         self.__conn = conn
         self.__name = name
         self.__prize_points = 0
         self.__advantage = False
         self.__timestamp = time.time()
-        self.__server = server
         self.__method = Method.NOP
         self.sendMessage('Name?\r\n')
 
