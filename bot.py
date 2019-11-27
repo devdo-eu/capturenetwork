@@ -44,11 +44,12 @@ class Bot:
     def timestamp(self):
         return self.__timestamp
     
-    def addPrize(self, prize):
+    def addPrize(self):
         self.__prize_points += rules.methodToPrize[self.__method]
     
-    def putMethod(self, method):
+    def putMethod(self, method, log=True):
         self.__timestamp = time.time()
         self.__method = Method.NOP
         if rules.nameToMethod.get(method, 'NA') != 'NA':
             self.__method = rules.nameToMethod[method]
+        if log: self.sendMessage('Command: ' + rules.methodToName[self.__method] + '\r\n')
