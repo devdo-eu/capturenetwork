@@ -11,6 +11,7 @@ import threading
 import time
 import bot
 import rules
+from datetime import datetime
 
 class myThread(threading.Thread):
     def __init__(self, threadID, name, server):
@@ -22,9 +23,11 @@ class myThread(threading.Thread):
         self.bots = []
         self.timestamp = time.time()
         self.passedRounds = 0
+        self.fileLogName = ''
+        self.fileHandle = ''
 
     def logBots(self):
-        data = server.getData()
+        data = server.get_data()
         while len(data):
             item = data.popitem()
             if item[1][:-2] == 'takeover':
@@ -51,12 +54,18 @@ class myThread(threading.Thread):
         self.timestamp = time.time()
         for tbot in self.bots:
             tbot.putMethod('NOP()', False)
-            tbot.sendMessage('Command>\r\n')
+            try:
+                tbot.sendMessage('Command>\r\n')
+            except OSError:
+                self.passedRounds = rules.numberOfRounds
+                self.bots.clear()
+                self.bot_id = 0
+                return
         times = 10
         while times > 0:
             times -= 1
             time.sleep(rules.timeOfRound / 10000)
-            data = server.getData()
+            data = server.get_data()
             while len(data):
                 item = data.popitem()
                 for tbot in self.bots:
@@ -116,15 +125,23 @@ class myThread(threading.Thread):
             bot_2.putAdvantage(False)
             adv = 'Time'
 
-        msg_1 = bot_1.name() + ' USED: ' + rules.methodToName[bot_1.method()] + ' TIME: ' + str("%.2f" % time_1) \
-            + ' POINTS: ' + str(bot_1.points())
-        msg_2 = bot_2.name() + ' USED: ' + rules.methodToName[bot_2.method()] + ' TIME: ' + str("%.2f" % time_2) \
-            + ' POINTS: ' + str(bot_2.points())
-        msg_sum = ' WINNER: ' + winner + ' ADVANTAGE: ' + adv \
-                  + ' ROUNDS: ' + str(self.passedRounds) + '/' + str(rules.numberOfRounds) + '\r\n'
+        msg_1 = '{ "BOT": "' + bot_1.name() + \
+                '", "USED": "' + rules.methodToName[bot_1.method()] + \
+                '", "TIME": "' + str("%.2f" % time_1) \
+            + '", "POINTS": "' + str(bot_1.points()) + '" }'
+        msg_2 = '{ "BOT": "' + bot_2.name() + \
+                '", "USED": "' + rules.methodToName[bot_2.method()] + \
+                '", "TIME": "' + str("%.2f" % time_2) \
+            + '", "POINTS": "' + str(bot_2.points()) + '" }'
 
-        bot_1.sendMessage('RESULTS: ' + msg_1 + ' ' + msg_2 + msg_sum)
-        bot_2.sendMessage('RESULTS: ' + msg_2 + ' ' + msg_1 + msg_sum)
+        msg_sum = '{ "WINNER": "' + winner + '", "ADVANTAGE": "' + adv \
+                  + '", "ROUNDS": "' + str(self.passedRounds) + '/' + str(rules.numberOfRounds) + '" }'
+
+        bot_1.sendMessage('{"BOTS INFO": [' + msg_1 + ', ' + msg_2 + '], "SUMMARY": ' + msg_sum + ' }\r\n')
+        bot_2.sendMessage('{"BOTS INFO": [' + msg_2 + ', ' + msg_1 + '], "SUMMARY": ' + msg_sum + ' }\r\n')
+        dateString = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        self.fileHandle.write('{ "TIME": "' + dateString +
+                              '", "BOTS INFO": [' + msg_1 + ', ' + msg_2 + '], "SUMMARY": ' + msg_sum + ' }\r\n')
         logging.info(msg_sum)
 
     def concludeGame(self):
@@ -139,13 +156,18 @@ class myThread(threading.Thread):
             bot_1.sendMessage(msg_win)
             bot_2.sendMessage(msg_lost)
             logging.info(bot_1.name() + ' WIN with ' + str(bot_1.points()) + ' POINTS')
+            self.fileHandle.write('{"WINNER": { "BOT": "' + bot_1.name() +
+                                  '", "WIN WITH": "' + str(bot_1.points()) + ' POINTS" }}')
         elif bot_1.points() < bot_2.points():
             bot_1.sendMessage(msg_lost)
             bot_2.sendMessage(msg_win)
             logging.info(bot_2.name() + ' WIN with ' + str(bot_2.points()) + ' POINTS')
+            self.fileHandle.write('{"WINNER": { "BOT": "' + bot_2.name() +
+                                  '", "WIN WITH": "' + str(bot_2.points()) + ' POINTS" }}')
         else:
             bot_1.sendMessage(msg_draw)
             bot_2.sendMessage(msg_draw)
+            self.fileHandle.write('{"WINNER": { "BOT": " ", "WIN WITH": "DRAW" }}')
             logging.info(msg_draw)
 
         server.close_connection(bot_1.connection())
@@ -161,11 +183,14 @@ class myThread(threading.Thread):
 
             self.logBots()
             self.passedRounds = 0
+            self.fileLogName = datetime.now().strftime("%d_%m_%Y_%H_%M_%S.log")
+            self.fileHandle = open(self.fileLogName, 'a+')
             while server.closed is False and self.passedRounds < rules.numberOfRounds:
                 self.runRound()
                 self.concludeTurn()
 
             self.concludeGame()
+            self.fileHandle.close()
         logging.info("Exiting " + self.name)
 
 
