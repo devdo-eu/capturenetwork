@@ -30,6 +30,8 @@ class myThread(threading.Thread):
         self.passedRounds = 0
         self.fileLogName = ''
         self.fileHandle = ''
+        self.gameRecord = []
+        self.gameHistory = []
 
     def logBots(self):
         data = server.get_data()
@@ -139,7 +141,7 @@ class myThread(threading.Thread):
 
         bot_1.sendMessage(json.dumps(msg_1) + '\r\n')
         bot_2.sendMessage(json.dumps(msg_2) + '\r\n')
-        self.fileHandle.write(json.dumps(msg_1) + '\r\n')
+        self.gameRecord.append(json.dumps(msg_1) + '\r\n')
         logging.info(json.dumps(summary))
 
     def concludeGame(self):
@@ -157,11 +159,14 @@ class myThread(threading.Thread):
 
         bot_1.sendMessage(json.dumps(results))
         bot_2.sendMessage(json.dumps(results))
-        self.fileHandle.write(json.dumps(results))
+        self.gameRecord.append(json.dumps(results))
+        self.gameHistory.append(self.gameRecord)
+        self.fileHandle.writelines("%s" % item for item in self.gameRecord)
         logging.info(json.dumps(results))
 
         server.close_connection(bot_1.connection())
         server.close_connection(bot_2.connection())
+        self.gameRecord = []
         self.bots.clear()
         self.bot_id = 0
 
