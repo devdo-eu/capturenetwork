@@ -1,5 +1,6 @@
 import time
-from enumeration import Method, Result, Advantage
+from enumeration import Method
+from collections import defaultdict
 import rules
 
 
@@ -13,6 +14,17 @@ class Bot:
         self.__timestamp = time.time()
         self.__method = Method.NOP
         self.sendMessage('Name?\r\n')
+
+    def __tree(self): return defaultdict(self.__tree)
+
+    def toJSON(self, timestamp):
+        ret = self.__tree()
+        ret['NAME'] = self.name()
+        ret['USED'] = rules.methodToName[self.method()]
+        ret['TIME'] = self.timestamp() - timestamp
+        ret['POINTS'] = self.points()
+        return ret
+
 
     def sendMessage(self, message):
         self.__conn.send(message.encode('utf-8'))

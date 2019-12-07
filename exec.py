@@ -4,14 +4,19 @@ Created on Thu Nov 21 19:32:07 2019
 
 @author: Grzesiek-UC
 """
-
 from TCP_Server import SelectorServer
+from collections import defaultdict
 import logging
 import threading
 import time
 import bot
 import rules
+import json
+import copy
 from datetime import datetime
+
+
+def tree(): return defaultdict(tree)
 
 class myThread(threading.Thread):
     def __init__(self, threadID, name, server):
@@ -91,8 +96,6 @@ class myThread(threading.Thread):
         advantage_1 = rules.methodToMethodAdvantage[bot_1.method()][bot_2.method()]
         adv = str(bot_1.name())
 
-        time_1, time_2 = bot_1.timestamp() - self.timestamp, bot_2.timestamp() - self.timestamp
-
         if result_1 is rules.Result.FASTER_WINNER:
             if bot_1.advantage() == bot_2.advantage():
                 if bot_1.timestamp() < bot_2.timestamp:
@@ -125,50 +128,37 @@ class myThread(threading.Thread):
             bot_2.putAdvantage(False)
             adv = 'Time'
 
-        msg_1 = '{ "BOT": "' + bot_1.name() + \
-                '", "USED": "' + rules.methodToName[bot_1.method()] + \
-                '", "TIME": "' + str("%.2f" % time_1) \
-            + '", "POINTS": "' + str(bot_1.points()) + '" }'
-        msg_2 = '{ "BOT": "' + bot_2.name() + \
-                '", "USED": "' + rules.methodToName[bot_2.method()] + \
-                '", "TIME": "' + str("%.2f" % time_2) \
-            + '", "POINTS": "' + str(bot_2.points()) + '" }'
+        summary = tree()
+        summary['TIME'] = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        summary['WINNER'], summary['ADVANTAGE'] = winner, adv
+        summary['ROUNDS'] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
 
-        msg_sum = '{ "WINNER": "' + winner + '", "ADVANTAGE": "' + adv \
-                  + '", "ROUNDS": "' + str(self.passedRounds) + '/' + str(rules.numberOfRounds) + '" }'
+        msg_1 = msg_2 = copy.copy(summary)
+        msg_1['BOT_1'], msg_1['BOT_2'] = bot_1.toJSON(self.timestamp), bot_2.toJSON(self.timestamp)
+        msg_2['BOT_1'], msg_2['BOT_2'] = bot_2.toJSON(self.timestamp), bot_1.toJSON(self.timestamp)
 
-        bot_1.sendMessage('{"BOTS INFO": [' + msg_1 + ', ' + msg_2 + '], "SUMMARY": ' + msg_sum + ' }\r\n')
-        bot_2.sendMessage('{"BOTS INFO": [' + msg_2 + ', ' + msg_1 + '], "SUMMARY": ' + msg_sum + ' }\r\n')
-        dateString = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        self.fileHandle.write('{ "TIME": "' + dateString +
-                              '", "BOTS INFO": [' + msg_1 + ', ' + msg_2 + '], "SUMMARY": ' + msg_sum + ' }\r\n')
-        logging.info(msg_sum)
+        bot_1.sendMessage(json.dumps(msg_1) + '\r\n')
+        bot_2.sendMessage(json.dumps(msg_2) + '\r\n')
+        self.fileHandle.write(json.dumps(msg_1) + '\r\n')
+        logging.info(json.dumps(summary))
 
     def concludeGame(self):
         if len(self.bots) != 2:
             return
 
         bot_1, bot_2 = self.bots[0], self.bots[1]
-        msg_win = 'Battle ends - This BOT WIN'
-        msg_lost = 'Battle ends - This BOT LOSE'
-        msg_draw = 'Battle ends - Result is DRAW'
+        results = tree()
         if bot_1.points() > bot_2.points():
-            bot_1.sendMessage(msg_win)
-            bot_2.sendMessage(msg_lost)
-            logging.info(bot_1.name() + ' WIN with ' + str(bot_1.points()) + ' POINTS')
-            self.fileHandle.write('{"WINNER": { "BOT": "' + bot_1.name() +
-                                  '", "WIN WITH": "' + str(bot_1.points()) + ' POINTS" }}')
+            results['WINNER']['NAME'], results['WINNER']['POINTS'] = bot_1.name(), bot_1.points()
         elif bot_1.points() < bot_2.points():
-            bot_1.sendMessage(msg_lost)
-            bot_2.sendMessage(msg_win)
-            logging.info(bot_2.name() + ' WIN with ' + str(bot_2.points()) + ' POINTS')
-            self.fileHandle.write('{"WINNER": { "BOT": "' + bot_2.name() +
-                                  '", "WIN WITH": "' + str(bot_2.points()) + ' POINTS" }}')
+            results['WINNER']['NAME'], results['WINNER']['POINTS'] = bot_2.name(), bot_2.points()
         else:
-            bot_1.sendMessage(msg_draw)
-            bot_2.sendMessage(msg_draw)
-            self.fileHandle.write('{"WINNER": { "BOT": " ", "WIN WITH": "DRAW" }}')
-            logging.info(msg_draw)
+            results['WINNER']['NAME'], results['WINNER']['POINTS'] = 'DRAW - NO WINNER', 0
+
+        bot_1.sendMessage(json.dumps(results))
+        bot_2.sendMessage(json.dumps(results))
+        self.fileHandle.write(json.dumps(results))
+        logging.info(json.dumps(results))
 
         server.close_connection(bot_1.connection())
         server.close_connection(bot_2.connection())
