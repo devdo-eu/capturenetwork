@@ -70,6 +70,8 @@ class SelectorServer:
         self.selector.unregister(conn)
         conn.close()
         self.current_number_of_peers -= 1
+        logging.info('Num active peers = {0}'.format(
+            len(self.current_peers)))
 
     def on_read(self, conn, mask):
         try:

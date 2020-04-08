@@ -100,7 +100,7 @@ class myThread(threading.Thread):
 
         if result_1 is rules.Result.FASTER_WINNER:
             if bot_1.advantage() == bot_2.advantage():
-                if bot_1.timestamp() < bot_2.timestamp:
+                if bot_1.timestamp() < bot_2.timestamp():
                     bot_1.addPrize()
                 else:
                     bot_2.addPrize()
@@ -135,7 +135,8 @@ class myThread(threading.Thread):
         summary['WINNER'], summary['ADVANTAGE'] = winner, adv
         summary['ROUNDS'] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
 
-        msg_1 = msg_2 = copy.copy(summary)
+        msg_1 = copy.copy(summary)
+        msg_2 = copy.copy(summary)
         msg_1['BOT_1'], msg_1['BOT_2'] = bot_1.toJSON(self.timestamp), bot_2.toJSON(self.timestamp)
         msg_2['BOT_1'], msg_2['BOT_2'] = bot_2.toJSON(self.timestamp), bot_1.toJSON(self.timestamp)
 
