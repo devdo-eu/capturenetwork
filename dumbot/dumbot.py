@@ -53,7 +53,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 data = s.recv(1000)
                 if data == b'Command>\r\n':
                     log(data)
-                    move = moves[randrange(moves_len)]
+                    move = moves[randrange(1, moves_len)]
                     send(move)
                 elif data.startswith(b'Command: '):
                     log(data)
