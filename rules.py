@@ -21,17 +21,17 @@ methodToName = {
         }
 
 methodToPrize = {
-        Method.INFECT: 5,
+        Method.INFECT: 4,
         Method.EXPLOIT: 2,
         Method.OVERHEAR: 1,
-        Method.OVERLOAD: 3,
-        Method.SCAN: 0,
-        Method.PATCH: 0,
+        Method.OVERLOAD: 4,
+        Method.SCAN: 3,
+        Method.PATCH: 3,
         Method.NOP: 0
         }
 
-timeOfRound = 100  # milliseconds
-numberOfRounds = 100
+timeOfRound = 50  # milliseconds
+numberOfRounds = 2000
 
 methodToMethodResult = {
         Method.INFECT: {
@@ -48,8 +48,8 @@ methodToMethodResult = {
                 Method.EXPLOIT: Result.FASTER_WINNER,
                 Method.OVERHEAR: Result.FASTER_WINNER,
                 Method.OVERLOAD: Result.FASTER_WINNER,
-                Method.SCAN: Result.DRAW,
-                Method.PATCH: Result.DRAW,
+                Method.SCAN: Result.LOSE,
+                Method.PATCH: Result.LOSE,
                 Method.NOP: Result.WIN
                 },
         Method.OVERHEAR: {
@@ -67,12 +67,12 @@ methodToMethodResult = {
                 Method.OVERHEAR: Result.FASTER_WINNER,
                 Method.OVERLOAD: Result.FASTER_WINNER,
                 Method.SCAN: Result.WIN,
-                Method.PATCH: Result.DRAW,
+                Method.PATCH: Result.LOSE,
                 Method.NOP: Result.WIN
                 },
         Method.SCAN: {
                 Method.INFECT: Result.DRAW,
-                Method.EXPLOIT: Result.DRAW,
+                Method.EXPLOIT: Result.WIN,
                 Method.OVERHEAR: Result.DRAW,
                 Method.OVERLOAD: Result.LOSE,
                 Method.SCAN: Result.DRAW,
@@ -81,8 +81,8 @@ methodToMethodResult = {
                 },
         Method.PATCH: {
                 Method.INFECT: Result.LOSE,
-                Method.EXPLOIT: Result.DRAW,
-                Method.OVERHEAR: Result.DRAW,
+                Method.EXPLOIT: Result.WIN,
+                Method.OVERHEAR: Result.WIN,
                 Method.OVERLOAD: Result.DRAW,
                 Method.SCAN: Result.DRAW,
                 Method.PATCH: Result.DRAW,
