@@ -84,6 +84,8 @@ class SelectorServer:
                 self.close_connection(conn)
         except ConnectionResetError:
             self.close_connection(conn)
+        except OSError:
+            self.close_connection(conn)
     
     def get_data(self):
         return self.__peerData
