@@ -61,13 +61,7 @@ class myThread(threading.Thread):
         self.timestamp = time.time()
         for tbot in self.bots:
             tbot.putMethod('NOP()', False)
-            try:
-                tbot.sendMessage('Command>\r\n')
-            except OSError:
-                self.passedRounds = rules.numberOfRounds
-                self.bots.clear()
-                self.bot_id = 0
-                return
+            tbot.sendMessage('Command>\r\n')
         times = 10
         while times > 0:
             times -= 1
@@ -182,8 +176,16 @@ class myThread(threading.Thread):
             self.fileLogName = datetime.now().strftime("%d_%m_%Y_%H_%M_%S.log")
             self.fileHandle = open(self.fileLogName, 'a+')
             while server.closed is False and self.passedRounds < rules.numberOfRounds:
-                self.runRound()
-                self.concludeTurn()
+                try:
+                    self.runRound()
+                    self.concludeTurn()
+                except OSError:
+                    bot_1, bot_2 = self.bots[0], self.bots[1]
+                    server.close_connection(bot_1.connection())
+                    server.close_connection(bot_2.connection())
+                    self.bots.clear()
+                    self.bot_id = 0
+                    break
 
             self.concludeGame()
             self.fileHandle.close()
