@@ -18,14 +18,76 @@ from datetime import datetime
 
 def tree(): return defaultdict(tree)
 
-class myThread(threading.Thread):
+
+def cBattleThread(iden, server, bot_1, bot_2):
+    thread = myThread(iden, "Battle Thread #" + str(iden), server, bot_1, bot_2)
+    thread.start()
+    return thread
+
+
+class botDispachThread(threading.Thread):
     def __init__(self, threadID, name, server):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
         self.server = server
+        self.games = 0
         self.bot_id = 0
         self.bots = []
+        self.threads = []
+
+    def run(self):
+        logging.info(self.name + " Ready.")
+        while server.closed is False:
+            try:
+                self.logBots()
+                if len(self.bots) >= 2:
+                    self.logBots()
+                    bot_1, bot_2 = self.bots.pop(), self.bots.pop()
+                    logging.info("Game can be played.....")
+                    self.threads.append(cBattleThread(self.games, server, bot_1, bot_2))
+                    self.games += 1
+                    self.bot_id = 0
+            except OSError as e:
+                logging.info("Exception occured: " + str(e.args[0]))
+        for t in self.threads:
+            t.join()
+
+
+    def logBots(self):
+        data = server.get_data()
+        cData = copy.copy(data)
+        for k, v in cData.items():
+            if v[:-2] == 'takeover':
+                for conn in server.conns:
+                    if conn.getpeername() == k and self.bot_id < 2:
+                        server.conns.pop()
+                        del data[k]
+                        new_bot = bot.Bot(conn, self.bot_id, 'BOT_' + str(self.bot_id))
+                        self.bots.append(new_bot)
+                        self.bot_id += 1
+                        logging.info("Dispatcher: Bot Connected...")
+            else:
+                for tbot in self.bots:
+                    if tbot.connection().getpeername() == k:
+                        tbot.putName(v[:-2])
+                        del data[k]
+                for conn in server.conns:
+                    if conn.getpeername() == k:
+                        server.send_to_conn(k, 'Access denied\r\n')
+                        server.close_connection(conn)
+                        server.conns.remove(conn)
+                        del data[k]
+        time.sleep(1)
+
+
+class myThread(threading.Thread):
+    def __init__(self, threadID, name, server, bot_1, bot_2):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.server = server
+        self.bots = [bot_1, bot_2]
         self.timestamp = time.time()
         self.passedRounds = 0
         self.fileLogName = ''
@@ -33,53 +95,24 @@ class myThread(threading.Thread):
         self.gameRecord = []
         self.gameHistory = []
 
-    def logBots(self):
-        data = server.get_data()
-        while len(data):
-            item = data.popitem()
-            if item[1][:-2] == 'takeover':
-                conn_index = 0
-                for conn in server.conns:
-                    if conn.getpeername() == item[0] and self.bot_id < 2:
-                        server.conns.pop(conn_index)
-                        new_bot = bot.Bot(conn, self.bot_id, 'BOT_' + str(self.bot_id))
-                        self.bots.append(new_bot)
-                        self.bot_id += 1
-                    conn_index += 1
-            else:
-                for tbot in self.bots:
-                    if tbot.connection().getpeername() == item[0]:
-                        tbot.putName(item[1][:-2])
-                for conn in server.conns:
-                    if conn.getpeername() == item[0]:
-                        server.send_to_conn(item[0], 'Access denied\r\n')
-                        server.close_connection(conn)
-                        server.conns.remove(conn)
-        time.sleep(1)
-
     def runRound(self):
         self.timestamp = time.time()
         for tbot in self.bots:
             tbot.putMethod('NOP()', False)
+            time.sleep(rules.timeOfRound / 3000)
             tbot.sendMessage('Command>\r\n')
-        times = 10
-        while times > 0:
-            times -= 1
-            time.sleep(rules.timeOfRound / 10000)
-            data = server.get_data()
-            while len(data):
-                item = data.popitem()
-                for tbot in self.bots:
-                    if tbot.connection().getpeername() == item[0]:
-                        if item[1][:5] == 'NAME(' and item[1][-3:-2] == ')':
-                            tbot.putName(item[1][5:-3])
-                        else:
-                            tbot.putMethod(item[1][:-2])
-                for conn in server.conns:
-                    if conn.getpeername() == item[0]:
-                        server.send_to_conn(item[0], 'Access denied - Battle in progress\r\n')
-                        server.close_connection(conn)
-                        server.conns.remove(conn)
+        time.sleep(rules.timeOfRound * 2 / 3000)
+        data = server.get_data()
+        cData = copy.copy(data)
+        for k, v in cData.items():
+            for tbot in self.bots:
+                if tbot.connection().getpeername() == k:
+                    if v[:5] == 'NAME(' and v[-3:-2] == ')':
+                        tbot.putName(v[5:-3])
+                    else:
+                        tbot.putMethod(v[:-2])
+                    del data[k]
+                    break
         self.passedRounds += 1
 
     def concludeTurn(self):
@@ -163,32 +196,26 @@ class myThread(threading.Thread):
         server.close_connection(bot_2.connection())
         self.gameRecord = []
         self.bots.clear()
-        self.bot_id = 0
 
     def run(self):
-        logging.info("Starting " + self.name)
-        while server.closed is False:
-            while server.closed is False and self.bot_id < 2:
-                self.logBots()
+        logging.info("Starting Battle: " + self.name)
+        self.passedRounds = 0
+        self.fileLogName = datetime.now().strftime("%d_%m_%Y_%H_%M_%S.log")
+        self.fileHandle = open(self.fileLogName, 'a+')
+        while server.closed is False and self.passedRounds < rules.numberOfRounds:
+            try:
+                self.runRound()
+                self.concludeTurn()
+            except OSError:
+                bot_1, bot_2 = self.bots[0], self.bots[1]
+                server.close_connection(bot_1.connection())
+                server.close_connection(bot_2.connection())
+                self.bots.clear()
+                self.bot_id = 0
+                break
 
-            self.logBots()
-            self.passedRounds = 0
-            self.fileLogName = datetime.now().strftime("%d_%m_%Y_%H_%M_%S.log")
-            self.fileHandle = open(self.fileLogName, 'a+')
-            while server.closed is False and self.passedRounds < rules.numberOfRounds:
-                try:
-                    self.runRound()
-                    self.concludeTurn()
-                except OSError:
-                    bot_1, bot_2 = self.bots[0], self.bots[1]
-                    server.close_connection(bot_1.connection())
-                    server.close_connection(bot_2.connection())
-                    self.bots.clear()
-                    self.bot_id = 0
-                    break
-
-            self.concludeGame()
-            self.fileHandle.close()
+        self.concludeGame()
+        self.fileHandle.close()
         logging.info("Exiting " + self.name)
 
 
@@ -197,10 +224,10 @@ PORT = 21000
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 if __name__ == '__main__':
-    logging.info('starting')
+    logging.info('starting...')
     greetings = '-----<<<Battle.Server>>>-----\r\n---<<<CaptureTheNetwork>>>---\r\n'
     server = SelectorServer(greetings, host=HOST, port=PORT)
-    thread1 = myThread(1, "Game Logic Thread", server)
+    thread1 = botDispachThread(1, "Dispatcher", server)
     thread1.start()
     try:
         server.serve_forever()
