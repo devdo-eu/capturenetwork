@@ -80,11 +80,11 @@ class SelectorServer:
                 peername = conn.getpeername()
                 logging.info('got data from {}: {!r}'.format(peername, data))
                 self.__peerData[peername] = data.decode('utf-8')
-            else:
-                self.close_connection(conn)
-        except ConnectionResetError:
+        except ConnectionResetError as e:
+            logging.info(f'ConnectionResetErrorException: {e.strerror}')
             self.close_connection(conn)
-        except OSError:
+        except OSError as e:
+            logging.info(f'OSError Exception: {e.strerror}')
             self.close_connection(conn)
     
     def get_data(self):

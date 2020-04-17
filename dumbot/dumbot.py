@@ -1,6 +1,7 @@
 import logging
 import socket
 import json
+from json import JSONDecodeError
 from time import sleep
 from random import randrange
 
@@ -20,7 +21,7 @@ moves_len = len(moves)
 history = []
 
 def log(data):
-    if type(data) == dict:
+    if type(data) == dict or type(data) == str:
         logging.info(data)
     else:
         logging.info(data.decode('utf-8'))
@@ -59,9 +60,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     log(data)
                 elif data.startswith(b'{"TIME": '):
                     # log(data)
-                    data = json.loads(data)
-                    history.append(data)
-                    log(data['BOT_1'])
+                    try:
+                        data = json.loads(data)
+                        history.append(data)
+                        log(data['BOT_1'])
+                    except JSONDecodeError as e:
+                        log(f'Exception: {e.msg} while parsing data.')
 
                 else:
                     log(data)

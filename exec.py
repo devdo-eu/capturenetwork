@@ -49,7 +49,7 @@ class botDispachThread(threading.Thread):
                     self.games += 1
                     self.bot_id = 0
             except OSError as e:
-                logging.info("Exception occured: " + str(e.args[0]))
+                logging.info(f"OSError Exception: {e.strerror}")
         for t in self.threads:
             t.join()
 
@@ -59,14 +59,20 @@ class botDispachThread(threading.Thread):
         cData = copy.copy(data)
         for k, v in cData.items():
             if v[:-2] == 'takeover':
-                for conn in server.conns:
+                for conn in copy.copy(server.conns):
+                    try:
+                        temp = conn.getpeername()
+                    except OSError:
+                        server.close_connection(conn)
+                        server.conns.remove(conn)
                     if conn.getpeername() == k and self.bot_id < 2:
-                        server.conns.pop()
+                        server.conns.remove(conn)
                         del data[k]
                         new_bot = bot.Bot(conn, self.bot_id, 'BOT_' + str(self.bot_id))
                         self.bots.append(new_bot)
                         self.bot_id += 1
                         logging.info("Dispatcher: Bot Connected...")
+                        break
             else:
                 for tbot in self.bots:
                     if tbot.connection().getpeername() == k:
@@ -78,7 +84,7 @@ class botDispachThread(threading.Thread):
                         server.close_connection(conn)
                         server.conns.remove(conn)
                         del data[k]
-        time.sleep(1)
+        time.sleep(0.1)
 
 
 class myThread(threading.Thread):
