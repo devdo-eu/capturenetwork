@@ -85,7 +85,7 @@ class PlayBot:
         move = self.moves[randrange(1, len(self.moves))]
         self.send(move)
 
-    def move_ack(self):
+    def move_ack(self, data):
         self.log('Move ACK.')
 
     def round_ends(self, data):
@@ -107,7 +107,7 @@ class PlayBot:
                 self.move()
 
             elif data.startswith(b'Command: '):
-                self.move_ack()
+                self.move_ack(data)
 
             elif data.startswith(b'{"TIME": '):
                 self.round_ends(data)
@@ -119,6 +119,7 @@ class PlayBot:
         self.connect()
         self.login()
         self.play()
+
 
 if __name__ == '__main__':
     bot = PlayBot('localhost', 21000)
