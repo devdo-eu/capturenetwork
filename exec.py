@@ -166,7 +166,7 @@ class myThread(threading.Thread):
             data['BOT_2']['NAME'] = bot_2.name()
             data['BOT_2']['POINTS'] = bot_2.points()
             data['ROUNDS'] = self.passedRounds
-            data['DATE'] = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
+            data['DATE'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             file.writelines(json.dumps(data) + '\n')
 
     def runRound(self):
@@ -232,7 +232,7 @@ class myThread(threading.Thread):
             adv = 'Time'
 
         summary = tree()
-        summary['TIME'] = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        summary['TIME'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         summary['WINNER'], summary['ADVANTAGE'] = winner, adv
         summary['ROUNDS'] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
 
