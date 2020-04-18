@@ -59,6 +59,20 @@ class botDispachThread(threading.Thread):
             file.writelines(json.dumps(data))
         logging.info(self.name + ": Rules saved.")
 
+    def sendGo(self):
+        for bot in self.bots:
+            try:
+                bot.sendMessage("GO\r\n")
+            except ConnectionResetError as e:
+                self.bots.remove(bot)
+                self.bot_id -= 1
+            except ConnectionAbortedError as e:
+                self.bots.remove(bot)
+                self.bot_id -= 1
+            except OSError as e:
+                self.bots.remove(bot)
+                self.bot_id -= 1
+
     def run(self):
         logging.info(self.name + ": Loads GAME_ID...")
         self.loadData()
@@ -68,8 +82,10 @@ class botDispachThread(threading.Thread):
         while server.closed is False:
             try:
                 self.logBots()
+                if len(self.bots) > 0:
+                    self.sendGo()
+
                 if len(self.bots) >= 2:
-                    self.logBots()
                     bot_1, bot_2 = self.bots.pop(), self.bots.pop()
                     logging.info("Game can be played.....")
                     self.threads.append(cBattleThread(self.games, server, bot_1, bot_2))
@@ -79,6 +95,20 @@ class botDispachThread(threading.Thread):
                 logging.info(f"OSError Exception: {e.strerror}")
         for t in self.threads:
             t.join()
+
+    def logBotNames(self):
+        time.sleep(0.5)
+        data = server.get_data()
+        cData = copy.copy(data)
+        for k, v in cData.items():
+            for bot in self.bots:
+                try:
+                    if bot.connection().getpeername() == k and 'BOT_' in bot.name():
+                        bot.putName(v[:-2])
+                        del data[k]
+                except OSError as e:
+                    self.bots.remove(bot)
+                    self.bot_id -= 1
 
     def logBots(self):
         data = server.get_data()
@@ -98,12 +128,9 @@ class botDispachThread(threading.Thread):
                         self.bots.append(new_bot)
                         self.bot_id += 1
                         logging.info("Dispatcher: Bot Connected...")
+                        self.logBotNames()
                         break
             else:
-                for tbot in self.bots:
-                    if tbot.connection().getpeername() == k:
-                        tbot.putName(v[:-2])
-                        del data[k]
                 for conn in server.conns:
                     if conn.getpeername() == k:
                         server.send_to_conn(k, 'Access denied\r\n')
@@ -123,10 +150,14 @@ class myThread(threading.Thread):
         self.timestamp = time.time()
         self.passedRounds = 0
         self.fileLogName = ''
-        self.fileHandle = ''
         self.gameRecord = []
 
     def saveData(self, bot_1, bot_2):
+        self.fileLogName = f'{self.threadID}.json'
+        Path("./games/").mkdir(parents=True, exist_ok=True)
+        with open('games/' + self.fileLogName, 'a+') as file:
+            file.writelines("%s" % item for item in self.gameRecord)
+
         with open('game_list.json', 'a+') as file:
             data = tree()
             data['GAME_ID'] = self.threadID
@@ -231,14 +262,9 @@ class myThread(threading.Thread):
         bot_1.sendMessage(json.dumps(results))
         bot_2.sendMessage(json.dumps(results))
 
-        self.fileLogName = f'{self.threadID}.json'
-        Path("./games/").mkdir(parents=True, exist_ok=True)
-        self.fileHandle = open('games/' + self.fileLogName, 'a+')
-        self.fileHandle.writelines("%s" % item for item in self.gameRecord)
-        logging.info(json.dumps(results))
-
         self.saveData(bot_1, bot_2)
 
+        logging.info(json.dumps(results))
         server.close_connection(bot_1.connection())
         server.close_connection(bot_2.connection())
         self.gameRecord = []
@@ -256,11 +282,9 @@ class myThread(threading.Thread):
                 server.close_connection(bot_1.connection())
                 server.close_connection(bot_2.connection())
                 self.bots.clear()
-                self.bot_id = 0
                 break
 
         self.concludeGame()
-        self.fileHandle.close()
         logging.info("Exiting " + self.name)
 
 
