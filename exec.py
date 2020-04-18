@@ -14,6 +14,7 @@ import rules
 import json
 import copy
 from datetime import datetime
+from pathlib import Path
 
 
 def tree(): return defaultdict(tree)
@@ -36,8 +37,34 @@ class botDispachThread(threading.Thread):
         self.bots = []
         self.threads = []
 
+    def loadData(self):
+        try:
+            with open('game_list.json', 'r') as file:
+                for last_line in file:
+                    pass
+                data = last_line
+                if data != '':
+                    data = json.loads(data)
+                    self.games = data['GAME_ID'] + 1
+                    logging.info(self.name + f': game_list.json loaded.'
+                                             f' GAME_ID set to {self.games}')
+        except FileNotFoundError as e:
+            logging.info(self.name + ": No game_list.json file, GAME_ID set to 0.")
+
+    def saveRules(self):
+        with open('rules.json', 'w') as file:
+            data = tree()
+            data['ROUND_TIME_MS'] = rules.timeOfRound
+            data['ROUNDS'] = rules.numberOfRounds
+            file.writelines(json.dumps(data))
+        logging.info(self.name + ": Rules saved.")
+
     def run(self):
-        logging.info(self.name + " Ready.")
+        logging.info(self.name + ": Loads GAME_ID...")
+        self.loadData()
+        logging.info(self.name + ": Writes rules.json...")
+        self.saveRules()
+        logging.info(self.name + ": Ready.")
         while server.closed is False:
             try:
                 self.logBots()
@@ -52,7 +79,6 @@ class botDispachThread(threading.Thread):
                 logging.info(f"OSError Exception: {e.strerror}")
         for t in self.threads:
             t.join()
-
 
     def logBots(self):
         data = server.get_data()
@@ -99,7 +125,18 @@ class myThread(threading.Thread):
         self.fileLogName = ''
         self.fileHandle = ''
         self.gameRecord = []
-        self.gameHistory = []
+
+    def saveData(self, bot_1, bot_2):
+        with open('game_list.json', 'a+') as file:
+            data = tree()
+            data['GAME_ID'] = self.threadID
+            data['BOT_1']['NAME'] = bot_1.name()
+            data['BOT_1']['POINTS'] = bot_1.points()
+            data['BOT_2']['NAME'] = bot_2.name()
+            data['BOT_2']['POINTS'] = bot_2.points()
+            data['ROUNDS'] = self.passedRounds
+            data['DATE'] = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
+            file.writelines(json.dumps(data) + '\n')
 
     def runRound(self):
         self.timestamp = time.time()
@@ -193,13 +230,14 @@ class myThread(threading.Thread):
 
         bot_1.sendMessage(json.dumps(results))
         bot_2.sendMessage(json.dumps(results))
-        self.gameRecord.append(json.dumps(results))
-        self.gameHistory.append(self.gameRecord)
 
-        self.fileLogName = datetime.now().strftime("%d_%m_%Y_%H_%M_%S.log")
-        self.fileHandle = open(self.fileLogName, 'a+')
+        self.fileLogName = f'{self.threadID}.json'
+        Path("./games/").mkdir(parents=True, exist_ok=True)
+        self.fileHandle = open('games/' + self.fileLogName, 'a+')
         self.fileHandle.writelines("%s" % item for item in self.gameRecord)
         logging.info(json.dumps(results))
+
+        self.saveData(bot_1, bot_2)
 
         server.close_connection(bot_1.connection())
         server.close_connection(bot_2.connection())
@@ -231,7 +269,7 @@ PORT = 21000
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 if __name__ == '__main__':
-    logging.info('starting...')
+    logging.info('Battle.Server: Starting...')
     greetings = '-----<<<Battle.Server>>>-----\r\n---<<<CaptureTheNetwork>>>---\r\n'
     server = SelectorServer(greetings, host=HOST, port=PORT)
     thread1 = botDispachThread(1, "Dispatcher", server)
