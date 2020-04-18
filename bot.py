@@ -21,7 +21,7 @@ class Bot:
         ret = self.__tree()
         ret['NAME'] = self.name()
         ret['USED'] = rules.methodToName[self.method()]
-        ret['TIME'] = self.timestamp() - timestamp
+        ret['TIME'] = round(self.timestamp() - timestamp, 4)
         ret['POINTS'] = self.points()
         return ret
 

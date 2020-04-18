@@ -175,7 +175,7 @@ class myThread(threading.Thread):
 
         bot_1.sendMessage(json.dumps(msg_1) + '\r\n')
         bot_2.sendMessage(json.dumps(msg_2) + '\r\n')
-        self.gameRecord.append(json.dumps(msg_1) + '\r\n')
+        self.gameRecord.append(json.dumps(msg_1) + '\n')
         logging.info(json.dumps(summary))
 
     def concludeGame(self):
@@ -195,6 +195,9 @@ class myThread(threading.Thread):
         bot_2.sendMessage(json.dumps(results))
         self.gameRecord.append(json.dumps(results))
         self.gameHistory.append(self.gameRecord)
+
+        self.fileLogName = datetime.now().strftime("%d_%m_%Y_%H_%M_%S.log")
+        self.fileHandle = open(self.fileLogName, 'a+')
         self.fileHandle.writelines("%s" % item for item in self.gameRecord)
         logging.info(json.dumps(results))
 
@@ -206,8 +209,6 @@ class myThread(threading.Thread):
     def run(self):
         logging.info("Starting Battle: " + self.name)
         self.passedRounds = 0
-        self.fileLogName = datetime.now().strftime("%d_%m_%Y_%H_%M_%S.log")
-        self.fileHandle = open(self.fileLogName, 'a+')
         while server.closed is False and self.passedRounds < rules.numberOfRounds:
             try:
                 self.runRound()
