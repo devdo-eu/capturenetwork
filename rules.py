@@ -58,7 +58,7 @@ methodToMethodResult = {
                 Method.OVERHEAR: Result.FASTER_WINNER,
                 Method.OVERLOAD: Result.FASTER_WINNER,
                 Method.SCAN: Result.DRAW,
-                Method.PATCH: Result.DRAW,
+                Method.PATCH: Result.LOSE,
                 Method.NOP: Result.WIN
                 },
         Method.OVERLOAD: {
@@ -67,7 +67,7 @@ methodToMethodResult = {
                 Method.OVERHEAR: Result.FASTER_WINNER,
                 Method.OVERLOAD: Result.FASTER_WINNER,
                 Method.SCAN: Result.WIN,
-                Method.PATCH: Result.LOSE,
+                Method.PATCH: Result.DRAW,
                 Method.NOP: Result.WIN
                 },
         Method.SCAN: {
