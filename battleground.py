@@ -10,6 +10,7 @@ import copy
 from datetime import datetime
 from pathlib import Path
 
+
 def tree(): return defaultdict(tree)
 
 
@@ -28,10 +29,29 @@ class Battleground(threading.Thread):
     def saveData(self, bot_1, bot_2):
         self.fileLogName = f'{self.threadID}.json'
         Path("./games/").mkdir(parents=True, exist_ok=True)
+        game_json = tree()
+        game_json['ROUNDS'] = []
+        for round in self.gameRecord:
+            game_json['ROUNDS'].append(round)
         with open('games/' + self.fileLogName, 'a+') as file:
-            file.writelines("%s" % item for item in self.gameRecord)
+            file.writelines(json.dumps(game_json, sort_keys=True, indent=4))
 
-        with open('game_list.json', 'a+') as file:
+        try:
+            with open('game_list.json', 'r') as file:
+                game_list = ''
+                for line in file:
+                    game_list += line
+                game_list = json.loads(game_list)
+        except FileNotFoundError as e:
+            logging.info('No game_list.json file. Creating file.')
+            game_list = tree()
+            game_list['GAMES'] = []
+        except json.JSONDecodeError as e:
+            logging.info('Bad format inside game_list.json file.')
+            game_list = tree()
+            game_list['GAMES'] = []
+
+        with open('game_list.json', 'w') as file:
             data = tree()
             data['GAME_ID'] = self.threadID
             data['BOT_1']['NAME'] = bot_1.name()
@@ -40,7 +60,8 @@ class Battleground(threading.Thread):
             data['BOT_2']['POINTS'] = bot_2.points()
             data['ROUNDS'] = self.passedRounds
             data['DATE'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-            file.writelines(json.dumps(data) + '\n')
+            game_list['GAMES'].append(data)
+            file.writelines(json.dumps(game_list, sort_keys=True, indent=4) + '\n')
 
     def runRound(self):
         self.timestamp = time.time()
@@ -107,7 +128,7 @@ class Battleground(threading.Thread):
         summary = tree()
         summary['TIME'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         summary['WINNER'], summary['ADVANTAGE'] = winner, adv
-        summary['ROUNDS'] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
+        summary['ROUND'] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
 
         msg_1 = copy.copy(summary)
         msg_2 = copy.copy(summary)
@@ -116,7 +137,7 @@ class Battleground(threading.Thread):
 
         bot_1.sendMessage(json.dumps(msg_1) + '\r\n')
         bot_2.sendMessage(json.dumps(msg_2) + '\r\n')
-        self.gameRecord.append(json.dumps(msg_1) + '\n')
+        self.gameRecord.append(msg_1)
         logging.info(json.dumps(summary))
 
     def concludeGame(self):

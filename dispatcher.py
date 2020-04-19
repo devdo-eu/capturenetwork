@@ -27,14 +27,18 @@ class Dispatcher(threading.Thread):
     def loadData(self):
         try:
             with open('game_list.json', 'r') as file:
-                for last_line in file:
-                    pass
-                data = last_line
+                data = ''
+                for line in file:
+                    data += line
                 if data != '':
                     data = json.loads(data)
-                    self.games = data['GAME_ID'] + 1
+                    for last_game in data['GAMES']:
+                        pass
+                    self.games = last_game['GAME_ID'] + 1
                     logging.info(self.name + f': game_list.json loaded.'
                                              f' GAME_ID set to {self.games}')
+                else:
+                    logging.info('game_list.json file is empty, GAME_ID set to 0.')
         except FileNotFoundError as e:
             logging.info(self.name + ": No game_list.json file, GAME_ID set to 0.")
 
@@ -48,9 +52,9 @@ class Dispatcher(threading.Thread):
     def saveRules(self):
         with open('rules.json', 'w') as file:
             data = tree()
-            data['ROUND_TIME_MS'] = rules.timeOfRound
-            data['ROUNDS'] = rules.numberOfRounds
-            file.writelines(json.dumps(data))
+            data['RULES']['ROUND_TIME_MS'] = rules.timeOfRound
+            data['RULES']['ROUNDS'] = rules.numberOfRounds
+            file.writelines(json.dumps(data, sort_keys=True, indent=4))
         logging.info(self.name + ": Rules saved.")
 
     def sendGo(self):

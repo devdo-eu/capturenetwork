@@ -5,15 +5,9 @@ Created on Thu Nov 21 19:32:07 2019
 @author: Grzesiek-UC
 """
 from TCP_Server import SelectorServer
-from collections import defaultdict
 import logging
 import argparse
 from dispatcher import Dispatcher
-
-
-def tree(): return defaultdict(tree)
-
-
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 
