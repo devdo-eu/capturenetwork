@@ -11,7 +11,8 @@ class SelectorServer:
         self.main_socket = socket.socket()
         self.main_socket.bind((host, port))
         self.main_socket.listen(100)
-        self.main_socket.setblocking(False)
+        self.main_socket.settimeout(0.05)
+        # self.main_socket.setblocking(False)
         self.greetings = greetings
         self.closed = False
 

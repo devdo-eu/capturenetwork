@@ -1,5 +1,6 @@
 
 from collections import defaultdict
+from collections import deque
 import logging
 import threading
 import time
@@ -8,6 +9,7 @@ import rules
 import json
 import copy
 from battleground import Battleground
+from namesaker import Namesaker
 
 
 def tree(): return defaultdict(tree)
@@ -21,7 +23,8 @@ class Dispatcher(threading.Thread):
         self.server = server
         self.games = 0
         self.bot_id = 0
-        self.bots = []
+        self.heartbeat = 0
+        self.bots = deque()
         self.threads = []
 
     def loadData(self):
@@ -44,7 +47,7 @@ class Dispatcher(threading.Thread):
 
     def createBattle(self, id, server):
         name = f'Battleground #{str(id)}'
-        bot_1, bot_2 = self.bots.pop(), self.bots.pop()
+        bot_1, bot_2 = self.bots.popleft(), self.bots.popleft()
         thread = Battleground(id, name, server, bot_1, bot_2)
         thread.start()
         return thread
@@ -58,18 +61,22 @@ class Dispatcher(threading.Thread):
         logging.info(self.name + ": Rules saved.")
 
     def sendGo(self):
-        for bot in self.bots:
-            try:
-                bot.sendMessage("GO\r\n")
-            except ConnectionResetError as e:
-                self.bots.remove(bot)
-                self.bot_id -= 1
-            except ConnectionAbortedError as e:
-                self.bots.remove(bot)
-                self.bot_id -= 1
-            except OSError as e:
-                self.bots.remove(bot)
-                self.bot_id -= 1
+        if self.heartbeat > 1500:
+            self.heartbeat = 0
+            for bot in copy.copy(self.bots):
+                try:
+                    bot.sendMessage("GO\r\n")
+                except ConnectionResetError as e:
+                    self.bots.remove(bot)
+                    self.bot_id -= 1
+                except ConnectionAbortedError as e:
+                    self.bots.remove(bot)
+                    self.bot_id -= 1
+                except OSError as e:
+                    self.bots.remove(bot)
+                    self.bot_id -= 1
+        else:
+            self.heartbeat += 1
 
     def run(self):
         logging.info(self.name + ": Loads GAME_ID...")
@@ -80,8 +87,7 @@ class Dispatcher(threading.Thread):
         while self.server.closed is False:
             try:
                 self.logBots()
-                if len(self.bots) > 0:
-                    self.sendGo()
+                self.sendGo()
 
                 if len(self.bots) >= 2:
                     logging.info("Game can be played.....")
@@ -92,20 +98,6 @@ class Dispatcher(threading.Thread):
                 logging.info(f"OSError Exception: {e.strerror}")
         for t in self.threads:
             t.join()
-
-    def logBotNames(self):
-        time.sleep(0.5)
-        data = self.server.get_data()
-        cData = copy.copy(data)
-        for k, v in cData.items():
-            for bot in self.bots:
-                try:
-                    if bot.connection().getpeername() == k and 'BOT_' in bot.name():
-                        bot.putName(v[:-2])
-                        del data[k]
-                except OSError as e:
-                    self.bots.remove(bot)
-                    self.bot_id -= 1
 
     def logBots(self):
         data = self.server.get_data()
@@ -125,7 +117,7 @@ class Dispatcher(threading.Thread):
                         self.bots.append(new_bot)
                         self.bot_id += 1
                         logging.info("Dispatcher: Bot Connected...")
-                        self.logBotNames()
+                        self.threads.append(Namesaker(new_bot, self.server))
                         break
             else:
                 for conn in self.server.conns:
@@ -134,4 +126,4 @@ class Dispatcher(threading.Thread):
                         self.server.close_connection(conn)
                         self.server.conns.remove(conn)
                         del data[k]
-        time.sleep(0.1)
+        time.sleep(0.05)
