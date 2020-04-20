@@ -97,6 +97,7 @@ class PlayBot:
         self.log('Move ACK.')
 
     def round_ends(self, data):
+        self.heartbeat = 0
         try:
             data = json.loads(data)
             self.log(data['BOT_1'])

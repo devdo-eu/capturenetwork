@@ -65,22 +65,21 @@ class Battleground(threading.Thread):
 
     def runRound(self):
         self.timestamp = time.time()
+        deadline = time.time() + rules.timeOfRound / 1000
         for tbot in self.bots:
             tbot.putMethod('NOP()', False)
-            time.sleep(rules.timeOfRound / 3000)
+            time.sleep(0.01)
             tbot.sendMessage('Command>\r\n')
-        time.sleep(rules.timeOfRound * 2 / 3000)
-        data = self.server.get_data()
-        cData = copy.copy(data)
-        for k, v in cData.items():
-            for tbot in self.bots:
-                if tbot.connection().getpeername() == k:
-                    if v[:5] == 'NAME(' and v[-3:-2] == ')':
-                        tbot.putName(v[5:-3])
-                    else:
-                        tbot.putMethod(v[:-2])
-                    del data[k]
-                    break
+        while time.time() < deadline:
+            data = self.server.get_data()
+            cData = copy.copy(data)
+            for k, v in cData.items():
+                for bot in self.bots:
+                    if bot.connection().getpeername() == k:
+                        bot.putMethod(v[:-2])
+                        del data[k]
+                        break
+            time.sleep(0.001)
         self.passedRounds += 1
 
     def concludeTurn(self):

@@ -116,6 +116,7 @@ Battle.Server sends complete data about PlayBot moves, time of reaction and adva
 This information can be used to tweak PlayBot algorithm and to  change its tactics.
 ```python
 def round_ends(self, data):
+    self.heartbeat = 0
     try:
         data = json.loads(data)
         self.log(data['BOT_1'])

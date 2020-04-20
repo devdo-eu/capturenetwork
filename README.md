@@ -1,5 +1,6 @@
-![Run Battle.Server](./gifs/hXAIkoQd6I.gif)
 # Capture The Network
+
+![Run Battle.Server](./gifs/hXAIkoQd6I.gif)
 
 A competitive bot game where the key to victory is a clever algorithm
 
