@@ -51,3 +51,7 @@ optional arguments:
 * **Grzegorz Maciaszek** - *Initial work* - [Devdo.eu](https://github.com/devdo-eu)
 
 ## License
+
+MIT License
+
+Copyright (c) 2020 Grzegorz Maciaszek
