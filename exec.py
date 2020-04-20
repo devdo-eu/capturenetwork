@@ -13,8 +13,10 @@ logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 def parse():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--host', dest='host', type=str, default='localhost', help="defines server host")
-    parser.add_argument('--port', dest='port', type=int, default=21000, help="defines server port number")
+    parser.add_argument('--host', dest='host', type=str, default='localhost',
+                        help="defines server host. [default host: localhost]")
+    parser.add_argument('--port', dest='port', type=int, default=21000,
+                        help="defines server port number [default port: 21000]")
     return parser.parse_args()
 
 
