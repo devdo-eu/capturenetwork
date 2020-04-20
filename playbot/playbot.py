@@ -104,23 +104,23 @@ class PlayBot:
             self.log(f'Exception: {e.msg} while parsing data.')
 
     def game_ends(self, data):
-        self.log(data)
         self.game = False
+        self.log(data)
 
     def play(self):
         while self.game:
             data = self.get_data()
 
-            if b'Command>' in data:
+            if b'Command>' in data:  # Phase 1
                 self.move()
 
-            elif data.startswith(b'Command: '):
+            elif data.startswith(b'Command: '):  # Phase 2
                 self.move_ack(data)
 
-            elif data.startswith(b'{"TIME": '):
+            elif data.startswith(b'{"TIME": '):  # Phase 3
                 self.round_ends(data)
 
-            elif data.startswith(b'{"WINNER":'):
+            elif data.startswith(b'{"WINNER":'):  # After Skirmish
                 self.game_ends(data)
 
     def run(self):
