@@ -65,11 +65,11 @@ class Battleground(threading.Thread):
 
     def runRound(self):
         self.timestamp = time.time()
-        deadline = time.time() + rules.timeOfRound / 1000
         for tbot in self.bots:
             tbot.putMethod('NOP()', False)
             time.sleep(0.01)
             tbot.sendMessage('Command>\r\n')
+        deadline = time.time() + rules.timeOfRound / 1000
         while time.time() < deadline:
             data = self.server.get_data()
             cData = copy.copy(data)
