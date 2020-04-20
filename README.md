@@ -5,7 +5,7 @@ A competitive bot game where the key to victory is a clever algorithm
 
 ## Getting Started
 
-Theis repository consists of three parts.
+This repository consists of three parts.
  * The first part is the game server,<br>which calculates the results of rounds and the whole skirmish.
  * Second part is bot template, to fill up with clever algorithm
  * Third part is Jupyter Notebook for statistics generation after bot battle for more insight.

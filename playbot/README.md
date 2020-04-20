@@ -178,7 +178,7 @@ After game ends Battle.Server will send json similar to this one:
 "WINNER": 
   {
     "NAME": "Kappa",
-     "POINTS": 4071
+    "POINTS": 4071
   }
 }
 ```
