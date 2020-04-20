@@ -33,7 +33,10 @@ class Battleground(threading.Thread):
         game_json['ROUNDS'] = []
         for round in self.gameRecord:
             game_json['ROUNDS'].append(round)
-        with open('games/' + self.fileLogName, 'a+') as file:
+        with open('games/' + self.fileLogName, 'w') as file:
+            file.writelines(json.dumps(game_json, sort_keys=True, indent=4))
+
+        with open('games/' + 'last.json', 'w') as file:
             file.writelines(json.dumps(game_json, sort_keys=True, indent=4))
 
         try:
