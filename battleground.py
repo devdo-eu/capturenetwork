@@ -18,10 +18,11 @@ class Sender(threading.Thread):
     def __init__(self, bot):
         threading.Thread.__init__(self)
         self.bot = bot
+        self.deadline = time.time() + 3
 
     def run(self):
         global trigger
-        while not trigger:
+        while not trigger and time.time() < self.deadline:
             time.sleep(0.0001)
         self.bot.sendMessage('Command>\r\n')
 

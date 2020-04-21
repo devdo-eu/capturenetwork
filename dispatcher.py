@@ -60,8 +60,8 @@ class Dispatcher(threading.Thread):
             file.writelines(json.dumps(data, sort_keys=True, indent=4))
         logging.info(self.name + ": Rules saved.")
 
-    def sendGo(self):
-        if self.heartbeat > 1500:
+    def sendGo(self, force=False):
+        if self.heartbeat > 1500 or force:
             self.heartbeat = 0
             for bot in copy.copy(self.bots):
                 try:
@@ -88,6 +88,9 @@ class Dispatcher(threading.Thread):
             try:
                 self.logBots()
                 self.sendGo()
+
+                if len(self.bots) >= 2:
+                    self.sendGo(True)
 
                 if len(self.bots) >= 2:
                     logging.info("Game can be played.....")
