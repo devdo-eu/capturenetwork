@@ -36,9 +36,6 @@ class Battleground(threading.Thread):
         with open('games/' + self.fileLogName, 'w') as file:
             file.writelines(json.dumps(game_json, sort_keys=True, indent=4))
 
-        with open('games/' + 'last.json', 'w') as file:
-            file.writelines(json.dumps(game_json, sort_keys=True, indent=4))
-
         try:
             with open('game_list.json', 'r') as file:
                 game_list = ''
