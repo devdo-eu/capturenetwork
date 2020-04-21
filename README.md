@@ -47,6 +47,11 @@ optional arguments:
 
 ![Run PlayBot](./gifs/FmUhP08l11.gif)
 
+## Related Project
+
+You can find UI for this project here: [capturenetworkUI](https://github.com/ppolakiewicz/capturenetworkUI)<br>
+It is developed by [Paweł Polakiewicz](https://github.com/ppolakiewicz)
+
 ## Authors
 
 * **Grzegorz Maciaszek** - *Initial work* - [Devdo.eu](https://github.com/devdo-eu)
