@@ -3,7 +3,6 @@ from collections import defaultdict
 import logging
 import threading
 import time
-import bot
 import rules
 import json
 import copy
@@ -12,6 +11,19 @@ from pathlib import Path
 
 
 def tree(): return defaultdict(tree)
+
+trigger = False
+
+class Sender(threading.Thread):
+    def __init__(self, bot):
+        threading.Thread.__init__(self)
+        self.bot = bot
+
+    def run(self):
+        global trigger
+        while not trigger:
+            time.sleep(0.0001)
+        self.bot.sendMessage('Command>\r\n')
 
 
 class Battleground(threading.Thread):
@@ -64,22 +76,30 @@ class Battleground(threading.Thread):
             file.writelines(json.dumps(game_list, sort_keys=True, indent=4) + '\n')
 
     def runRound(self):
+        global trigger
+        time.sleep(0.01)
+        sendthreads =[]
+        for bot in self.bots:
+            bot.putMethod('NOP()', time.time(), False)
+            sendthread = Sender(bot)
+            sendthread.start()
+            sendthreads.append(sendthread)
         self.timestamp = time.time()
-        for tbot in self.bots:
-            tbot.putMethod('NOP()', False)
-            time.sleep(0.01)
-            tbot.sendMessage('Command>\r\n')
+        time.sleep(0.005)
+        trigger = True
         deadline = time.time() + rules.timeOfRound / 1000
         while time.time() < deadline:
             data = self.server.get_data()
             cData = copy.copy(data)
+            timestamp = time.time()
             for k, v in cData.items():
                 for bot in self.bots:
                     if bot.connection().getpeername() == k:
-                        bot.putMethod(v[:-2])
+                        bot.putMethod(v[:-2], timestamp)
                         del data[k]
                         break
             time.sleep(0.001)
+        trigger = False
         self.passedRounds += 1
 
     def concludeTurn(self):
