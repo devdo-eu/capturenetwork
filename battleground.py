@@ -80,11 +80,14 @@ class Battleground(threading.Thread):
     def runRound(self):
         global trigger
         time.sleep(0.01)
+        threads = []
         for bot in self.bots:
             bot.putMethod('NOP()', time.time(), False)
-            Sender(bot).start()
+            threads.append(Sender(bot))
+            threads[len(threads) - 1].start()
         self.timestamp = time.time()
         trigger = True
+        time.sleep(0.05)
         deadline = time.time() + rules.timeOfRound / 1000
         while time.time() < deadline:
             data = self.server.get_data()
@@ -146,10 +149,15 @@ class Battleground(threading.Thread):
         msg_1['BOT_1'], msg_1['BOT_2'] = self.bots[0].toJSON(self.timestamp), self.bots[1].toJSON(self.timestamp)
         msg_2['BOT_1'], msg_2['BOT_2'] = self.bots[1].toJSON(self.timestamp), self.bots[0].toJSON(self.timestamp)
 
-        if msg_2['ADVANTAGE'] == RoundWinner.BOT_2:
+        if msg_2['ADVANTAGE'] == RoundAdvantage.BOT_2:
             msg_2['ADVANTAGE'] = 1
-        elif msg_2['ADVANTAGE'] == RoundWinner.BOT_1:
+        elif msg_2['ADVANTAGE'] == RoundAdvantage.BOT_1:
             msg_2['ADVANTAGE'] = 2
+
+        if msg_2['WINNER'] == RoundWinner.BOT_2:
+            msg_2['WINNER'] = 1
+        elif msg_2['WINNER'] == RoundWinner.BOT_1:
+            msg_2['WINNER'] = 2
         return msg_1, msg_2
 
     def concludeTurn(self):
