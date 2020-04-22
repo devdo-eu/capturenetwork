@@ -1,4 +1,4 @@
-from enum import Enum, unique
+from enum import Enum, IntEnum, unique
 
 @unique
 class Method(Enum):
@@ -10,7 +10,7 @@ class Method(Enum):
     PATCH = 6
     NOP = 7
     
-@unique   
+@unique
 class Result(Enum):
     WIN = 1
     LOSE = 2
@@ -22,3 +22,15 @@ class Advantage(Enum):
     GAIN = 1
     LOST = 2
     NO_CHANGE = 3
+
+@unique
+class RoundWinner(IntEnum):
+    DRAW = 0
+    BOT_1 = 1
+    BOT_2 = 2
+
+@unique
+class RoundAdvantage(IntEnum):
+    TIME = 0
+    BOT_1 = 1
+    BOT_2 = 2

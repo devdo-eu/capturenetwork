@@ -8,6 +8,7 @@ import json
 import copy
 from datetime import datetime
 from pathlib import Path
+from enumeration import RoundWinner, RoundAdvantage
 
 
 def tree(): return defaultdict(tree)
@@ -79,14 +80,11 @@ class Battleground(threading.Thread):
     def runRound(self):
         global trigger
         time.sleep(0.01)
-        sendthreads =[]
         for bot in self.bots:
             bot.putMethod('NOP()', time.time(), False)
-            sendthread = Sender(bot)
-            sendthread.start()
-            sendthreads.append(sendthread)
+            Sender(bot).start()
         self.timestamp = time.time()
-        time.sleep(0.005)
+        # time.sleep(0.005)
         trigger = True
         deadline = time.time() + rules.timeOfRound / 1000
         while time.time() < deadline:
@@ -103,55 +101,59 @@ class Battleground(threading.Thread):
         trigger = False
         self.passedRounds += 1
 
+    def determineWinner(self):
+        bot_1, bot_2 = self.bots[0], self.bots[1]
+        result_1 = rules.methodToMethodResult[bot_1.method()][bot_2.method()]
+        winner = RoundWinner.DRAW
+
+        if result_1 is rules.Result.FASTER_WINNER:
+            if bot_1.advantage():
+                result_1 = rules.Result.WIN
+            elif bot_2.advantage():
+                result_1 = rules.Result.LOSE
+            else:
+                if bot_1.timestamp() < bot_2.timestamp():
+                    result_1 = rules.Result.WIN
+                else:
+                    result_1 = rules.Result.LOSE
+
+        if result_1 is rules.Result.WIN:
+            bot_1.addPrize()
+            winner = RoundWinner.BOT_1
+        elif result_1 is rules.Result.LOSE:
+            bot_2.addPrize()
+            winner = RoundWinner.BOT_2
+        return winner
+
+    def deremineAdvantage(self):
+        bot_1, bot_2 = self.bots[0], self.bots[1]
+        advantage_1 = rules.methodToMethodAdvantage[bot_1.method()][bot_2.method()]
+        bot_1.putAdvantage(False)
+        bot_2.putAdvantage(False)
+        adv = RoundAdvantage.TIME
+        if advantage_1 is rules.Advantage.GAIN:
+            bot_1.putAdvantage(True)
+            bot_2.putAdvantage(False)
+            adv = RoundAdvantage.BOT_1
+        elif advantage_1 is rules.Advantage.LOST:
+            bot_1.putAdvantage(False)
+            bot_2.putAdvantage(True)
+            adv = RoundAdvantage.BOT_2
+        return adv
+
+
     def concludeTurn(self):
         if len(self.bots) != 2:
             return
 
-        bot_1, bot_2 = self.bots[0], self.bots[1]
-        winner = bot_1.name()
-        result_1 = rules.methodToMethodResult[bot_1.method()][bot_2.method()]
-        advantage_1 = rules.methodToMethodAdvantage[bot_1.method()][bot_2.method()]
-        adv = str(bot_1.name())
-
-        if result_1 is rules.Result.FASTER_WINNER:
-            if bot_1.advantage() == bot_2.advantage():
-                if bot_1.timestamp() < bot_2.timestamp():
-                    bot_1.addPrize()
-                else:
-                    bot_2.addPrize()
-                    winner = bot_2.name()
-            elif bot_1.advantage():
-                bot_1.addPrize()
-            else:
-                bot_2.addPrize()
-                winner = bot_2.name()
-        elif result_1 is rules.Result.WIN:
-            bot_1.addPrize()
-        elif result_1 is rules.Result.LOSE:
-            bot_2.addPrize()
-            winner = bot_2.name()
-        else:
-            winner = 'DRAW'
-
-        if advantage_1 is rules.Advantage.GAIN:
-            bot_1.putAdvantage(True)
-            bot_2.putAdvantage(False)
-        elif advantage_1 is rules.Advantage.LOST:
-            bot_1.putAdvantage(False)
-            bot_2.putAdvantage(True)
-            adv = str(bot_2.name())
-        else:
-            bot_1.putAdvantage(False)
-            bot_2.putAdvantage(False)
-            adv = 'Time'
-
         summary = tree()
         summary['TIME'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-        summary['WINNER'], summary['ADVANTAGE'] = winner, adv
+        summary['WINNER'], summary['ADVANTAGE'] = self.determineWinner(), self.deremineAdvantage()
         summary['ROUND'] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
-
         msg_1 = copy.copy(summary)
         msg_2 = copy.copy(summary)
+
+        bot_1, bot_2 = self.bots[0], self.bots[1]
         msg_1['BOT_1'], msg_1['BOT_2'] = bot_1.toJSON(self.timestamp), bot_2.toJSON(self.timestamp)
         msg_2['BOT_1'], msg_2['BOT_2'] = bot_2.toJSON(self.timestamp), bot_1.toJSON(self.timestamp)
 
@@ -160,29 +162,32 @@ class Battleground(threading.Thread):
         self.gameRecord.append(msg_1)
         logging.info(json.dumps(summary))
 
+    def cleanAfterGame(self):
+        for bot in self.bots:
+            self.server.close_connection(bot.connection())
+        self.gameRecord = []
+        self.bots.clear()
+
     def concludeGame(self):
         if len(self.bots) != 2:
             return
 
-        bot_1, bot_2 = self.bots[0], self.bots[1]
+        bots = self.bots
         results = tree()
-        if bot_1.points() > bot_2.points():
-            results['WINNER']['NAME'], results['WINNER']['POINTS'] = bot_1.name(), bot_1.points()
-        elif bot_1.points() < bot_2.points():
-            results['WINNER']['NAME'], results['WINNER']['POINTS'] = bot_2.name(), bot_2.points()
+        shortcut = results['WINNER']
+        if bots[0].points() > bots[1].points():
+            shortcut['ID'], shortcut['NAME'], shortcut['POINTS'] = RoundWinner.BOT_1, bots[0].name(), bots[0].points()
+        elif bots[0].points() < bots[1].points():
+            shortcut['ID'], shortcut['NAME'], shortcut['POINTS'] = RoundWinner.BOT_2, bots[1].name(), bots[1].points()
         else:
-            results['WINNER']['NAME'], results['WINNER']['POINTS'] = 'DRAW - NO WINNER', 0
+            shortcut['ID'], shortcut['NAME'], shortcut['POINTS'] = RoundWinner.DRAW, '-', 0
 
-        bot_1.sendMessage(json.dumps(results))
-        bot_2.sendMessage(json.dumps(results))
-
-        self.saveData(bot_1, bot_2)
-
+        bots[0].sendMessage(json.dumps(results))
+        bots[1].sendMessage(json.dumps(results))
         logging.info(json.dumps(results))
-        self.server.close_connection(bot_1.connection())
-        self.server.close_connection(bot_2.connection())
-        self.gameRecord = []
-        self.bots.clear()
+
+        self.saveData(bots[0], bots[1])
+        self.cleanAfterGame()
 
     def run(self):
         logging.info("Starting Battle: " + self.name)
@@ -192,10 +197,7 @@ class Battleground(threading.Thread):
                 self.runRound()
                 self.concludeTurn()
             except OSError:
-                bot_1, bot_2 = self.bots[0], self.bots[1]
-                self.server.close_connection(bot_1.connection())
-                self.server.close_connection(bot_2.connection())
-                self.bots.clear()
+                self.cleanAfterGame()
                 break
 
         self.concludeGame()
