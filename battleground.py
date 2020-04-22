@@ -84,7 +84,6 @@ class Battleground(threading.Thread):
             bot.putMethod('NOP()', time.time(), False)
             Sender(bot).start()
         self.timestamp = time.time()
-        # time.sleep(0.005)
         trigger = True
         deadline = time.time() + rules.timeOfRound / 1000
         while time.time() < deadline:
@@ -141,6 +140,17 @@ class Battleground(threading.Thread):
             adv = RoundAdvantage.BOT_2
         return adv
 
+    def prepareBotMessages(self, summary):
+        msg_1 = copy.copy(summary)
+        msg_2 = copy.copy(summary)
+        msg_1['BOT_1'], msg_1['BOT_2'] = self.bots[0].toJSON(self.timestamp), self.bots[1].toJSON(self.timestamp)
+        msg_2['BOT_1'], msg_2['BOT_2'] = self.bots[1].toJSON(self.timestamp), self.bots[0].toJSON(self.timestamp)
+
+        if msg_2['ADVANTAGE'] == RoundWinner.BOT_2:
+            msg_2['ADVANTAGE'] = 1
+        elif msg_2['ADVANTAGE'] == RoundWinner.BOT_1:
+            msg_2['ADVANTAGE'] = 2
+        return msg_1, msg_2
 
     def concludeTurn(self):
         if len(self.bots) != 2:
@@ -150,15 +160,10 @@ class Battleground(threading.Thread):
         summary['TIME'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         summary['WINNER'], summary['ADVANTAGE'] = self.determineWinner(), self.deremineAdvantage()
         summary['ROUND'] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
-        msg_1 = copy.copy(summary)
-        msg_2 = copy.copy(summary)
+        msg_1, msg_2 = self.prepareBotMessages(summary)
 
-        bot_1, bot_2 = self.bots[0], self.bots[1]
-        msg_1['BOT_1'], msg_1['BOT_2'] = bot_1.toJSON(self.timestamp), bot_2.toJSON(self.timestamp)
-        msg_2['BOT_1'], msg_2['BOT_2'] = bot_2.toJSON(self.timestamp), bot_1.toJSON(self.timestamp)
-
-        bot_1.sendMessage(json.dumps(msg_1) + '\r\n')
-        bot_2.sendMessage(json.dumps(msg_2) + '\r\n')
+        self.bots[0].sendMessage(json.dumps(msg_1) + '\r\n')
+        self.bots[1].sendMessage(json.dumps(msg_2) + '\r\n')
         self.gameRecord.append(msg_1)
         logging.info(json.dumps(summary))
 
