@@ -22,5 +22,5 @@ class Namesaker(threading.Thread):
                         logging.info(f'Namesaker: Bot introduced himself as {v[:-2]}')
                         del data[k]
                         named = True
-                except OSError as e:
+                except OSError:
                     named = True

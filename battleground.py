@@ -13,7 +13,9 @@ from enumeration import RoundWinner, RoundAdvantage
 
 def tree(): return defaultdict(tree)
 
+
 trigger = False
+
 
 class Sender(threading.Thread):
     def __init__(self, bot):
@@ -56,11 +58,11 @@ class Battleground(threading.Thread):
                 for line in file:
                     game_list += line
                 game_list = json.loads(game_list)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             logging.info('No game_list.json file. Creating file.')
             game_list = tree()
             game_list['GAMES'] = []
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             logging.info('Bad format inside game_list.json file.')
             game_list = tree()
             game_list['GAMES'] = []

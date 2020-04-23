@@ -7,6 +7,7 @@ from random import randrange
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
+
 def parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--host', dest='host', type=str, default='localhost',
@@ -15,11 +16,12 @@ def parse():
                         help="defines server port number [default port: 21000]")
     return parser.parse_args()
 
+
 class PlayBot:
     def __init__(self, host, port):
         self.names = ['Mark', 'John', 'Alpha', 'Beta', 'Kappa',
-                 'Mk. II', 'HAL 9000', 'Multivac', 'Prime',
-                 'Legion', 'Cylons', 'A.L.I.E', 'Terminator']
+                      'Mk. II', 'HAL 9000', 'Multivac', 'Prime',
+                      'Legion', 'Cylons', 'A.L.I.E', 'Terminator']
         self.moves = ['NOP()', 'PATCH()', 'SCAN()', 'OVERLOAD()', 'OVERHEAR()', 'EXPLOIT()', 'INFECT()']
         self.host = host
         self.port = port
@@ -77,7 +79,7 @@ class PlayBot:
             self.heartbeat_socket()
             data = self.socket.recv(1024)
             return data
-        except socket.timeout as e:
+        except socket.timeout:
             return b''
         except ConnectionResetError as e:
             self.log(e.strerror)

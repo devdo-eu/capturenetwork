@@ -31,7 +31,7 @@ methodToPrize = {
         }
 
 timeOfRound = 30  # milliseconds
-numberOfRounds = 500
+numberOfRounds = 1000
 
 methodToMethodResult = {
         Method.INFECT: {
@@ -98,7 +98,7 @@ methodToMethodResult = {
                 Method.NOP: Result.DRAW
                 },
         }
-        
+
 methodToMethodAdvantage = {
         Method.INFECT: {
                 Method.INFECT: Advantage.NO_CHANGE,
