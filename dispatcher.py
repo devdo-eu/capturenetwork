@@ -29,7 +29,7 @@ class Dispatcher(threading.Thread):
 
     def loadData(self):
         try:
-            with open('game_list.json', 'r') as file:
+            with open('./history/game_list.json', 'r') as file:
                 data = ''
                 for line in file:
                     data += line
@@ -53,7 +53,7 @@ class Dispatcher(threading.Thread):
         return thread
 
     def saveRules(self):
-        with open('rules.json', 'w') as file:
+        with open('./history/rules.json', 'w') as file:
             data = tree()
             data['RULES']['ROUND_TIME_MS'] = rules.timeOfRound
             data['RULES']['ROUNDS'] = rules.numberOfRounds
