@@ -62,7 +62,7 @@ class PlayBot:
         sleep(0.2)
         self.send('takeover')
         sleep(0.2)
-        data = self.socket.recv(1000)
+        data = self.get_data()
         if b'Name?' in data:
             self.name()
         else:
