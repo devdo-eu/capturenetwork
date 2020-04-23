@@ -106,8 +106,8 @@ If the bot changes its mind, this is the phase to change the selected action.
 def move_ack(self, data):
     self.log('Move ACK.')
 ```
-`data` argument contains data from Battle.Server in format `b'Command: METHOD()'`<br>
-For example: `b'Command: NOP()'`
+`data` argument contains data from Battle.Server in format `b'Command: METHOD()\r\n'`<br>
+For example: `b'Command: NOP()\r\n'`
 
 ## Phase 3 - summary after round is over
 
