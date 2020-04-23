@@ -4,6 +4,7 @@ import socket
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
+
 class SelectorServer:
     def __init__(self, greetings, host, port):
         # Create the main socket that accepts incoming connections and start
@@ -31,13 +32,13 @@ class SelectorServer:
         self.conns = []
         self.current_number_of_peers = 0
         self.__peerData = {}
-        
+
     def close(self):
-            for conn in self.conns:
-                self.close_connection(conn)
-            self.main_socket.close()
-            self.closed = True
-            logging.info('all connection closed & cleaned up\r\n')
+        for conn in self.conns:
+            self.close_connection(conn)
+        self.main_socket.close()
+        self.closed = True
+        logging.info('all connection closed & cleaned up\r\n')
 
     def send_to_conn(self, peername, message):
         for conn in self.conns:
@@ -87,7 +88,7 @@ class SelectorServer:
         except OSError as e:
             logging.info(f'OSError Exception: {e.strerror}')
             self.close_connection(conn)
-    
+
     def get_data(self):
         return self.__peerData
 

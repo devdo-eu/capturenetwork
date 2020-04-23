@@ -127,11 +127,22 @@ You need to put data processing logic between try-except.<br>
 If data will be corrupted then lines after `except` will be called.<br>
 So you can prepare your bot for that circumstances
 
+After line `data = json.loads(data)` all information from Battle.Server will be parsed to object.<br>
+Bot can get access to distinct field by calling `data[FIELD]`.<br>
+
+For example: <br>
+you can write `data['ADVANTAGE']` to check value of `ADVANTAGE` field.<br>
+Line `name = data['BOT_1']['NAME']` will assign name of your bot to `name` variable.<br>
+To get information about action played by your rival write `data['BOT_2']['USED']`
+
+**ATTENTION:**
+Your bot data is always behind `BOT_1` field. Battle.Server sends customized data to the bot.
+
 The summary of the round is in the following json format:
 
 ```json
 {
-    "ADVANTAGE": "Time",
+    "ADVANTAGE": 0,
     "BOT_1": {
         "NAME": "Prime",
         "POINTS": 0,
@@ -146,20 +157,24 @@ The summary of the round is in the following json format:
     },
     "ROUND": "1/5000",
     "TIME": "2020-04-19T15:04:19",
-    "WINNER": "Kappa"
+    "WINNER": 2
 }
 ```
 
-After line `data = json.loads(data)` all information from Battle.Server will be parsed to object.<br>
-Bot can get access to distinct field by calling `data[FIELD]`.<br>
+Field `'ADVANTAGE'` contains value which corresponds to:
 
-For example: <br>
-you can write `data['ADVANTAGE']` to check value of `ADVANTAGE` field.<br>
-Line `name = data['BOT_1']['NAME']` will assign name of your bot to `name` variable.<br>
-To get information about action played by your rival write `data['BOT_2']['USED']`
+```python
+    TIME = 0
+    BOT_1 = 1
+    BOT_2 = 2
+```
 
-**ATTENTION:**
-Your bot data is always behind `BOT_1` field. Battle.Server sends customized data to the bot.
+Value of `'WINNER` field corresponds to:
+```python
+    DRAW = 0
+    BOT_1 = 1
+    BOT_2 = 2
+```
 
 ## After Skirmish
 
@@ -178,6 +193,7 @@ After game ends Battle.Server will send json similar to this one:
 {
 "WINNER": 
   {
+    "ID": 2,
     "NAME": "Kappa",
     "POINTS": 4071
   }

@@ -25,43 +25,43 @@ class Bot:
         ret['POINTS'] = self.points()
         return ret
 
-
     def sendMessage(self, message):
         self.__conn.send(message.encode('utf-8'))
-        
+
     def method(self):
         return self.__method
-    
+
     def points(self):
         return self.__prize_points
-    
+
     def advantage(self):
         return self.__advantage
-    
+
     def putAdvantage(self, advantage):
         self.__advantage = advantage
-        
+
     def putName(self, name):
         self.__name = name
-    
+
     def name(self):
         return self.__name
-    
+
     def id(self):
         return self.__id
-    
+
     def connection(self):
         return self.__conn
-    
+
     def timestamp(self):
         return self.__timestamp
-    
+
     def addPrize(self):
         self.__prize_points += rules.methodToPrize[self.__method]
-    
+
     def putMethod(self, method, timestamp, log=True):
         self.__timestamp = timestamp
         self.__method = Method.NOP
         if rules.nameToMethod.get(method, 'NA') != 'NA':
             self.__method = rules.nameToMethod[method]
-        if log: self.sendMessage('Command: ' + rules.methodToName[self.__method] + '\r\n')
+        if log:
+            self.sendMessage('Command: ' + rules.methodToName[self.__method] + '\r\n')

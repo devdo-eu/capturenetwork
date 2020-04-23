@@ -1,0 +1,6 @@
+*.json
+*.log
+*.csv
+__pycache__
+.idea
+.ipynb_checkpoints

@@ -42,7 +42,7 @@ class Dispatcher(threading.Thread):
                                              f' GAME_ID set to {self.games}')
                 else:
                     logging.info('game_list.json file is empty, GAME_ID set to 0.')
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             logging.info(self.name + ": No game_list.json file, GAME_ID set to 0.")
 
     def createBattle(self, id, server):
@@ -63,17 +63,17 @@ class Dispatcher(threading.Thread):
     def sendGo(self, force=False):
         if self.heartbeat > 1500 or force:
             self.heartbeat = 0
-            for bot in copy.copy(self.bots):
+            for bot_ in copy.copy(self.bots):
                 try:
-                    bot.sendMessage("GO\r\n")
-                except ConnectionResetError as e:
-                    self.bots.remove(bot)
+                    bot_.sendMessage("GO\r\n")
+                except ConnectionResetError:
+                    self.bots.remove(bot_)
                     self.bot_id -= 1
-                except ConnectionAbortedError as e:
-                    self.bots.remove(bot)
+                except ConnectionAbortedError:
+                    self.bots.remove(bot_)
                     self.bot_id -= 1
-                except OSError as e:
-                    self.bots.remove(bot)
+                except OSError:
+                    self.bots.remove(bot_)
                     self.bot_id -= 1
         else:
             self.heartbeat += 1
