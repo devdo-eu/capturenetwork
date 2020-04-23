@@ -44,11 +44,12 @@ class PlayBot:
         try:
             self.socket.connect((self.host, self.port))
             self.socket.settimeout(0.05)
+            self.log('Connected Successfully...')
         except OSError as e:
             self.log(f'Exception occurred when connecting to the server: {self.host}:{self.port}')
             self.log(e.strerror)
             self.game = False
-        self.log('Connected Successfully...')
+            self.log('End of workout...')
 
     def name(self):
         name = self.names[randrange(len(self.names))]
@@ -61,7 +62,7 @@ class PlayBot:
         sleep(0.2)
         self.send('takeover')
         sleep(0.2)
-        data = self.socket.recv(1000)
+        data = self.get_data()
         if b'Name?' in data:
             self.name()
         else:
