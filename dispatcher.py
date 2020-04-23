@@ -109,7 +109,7 @@ class Dispatcher(threading.Thread):
             if v[:-2] == 'takeover':
                 for conn in copy.copy(self.server.conns):
                     try:
-                        temp = conn.getpeername()
+                        conn.getpeername()
                     except OSError:
                         self.server.close_connection(conn)
                         self.server.conns.remove(conn)

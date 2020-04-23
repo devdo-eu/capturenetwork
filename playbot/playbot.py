@@ -1,8 +1,7 @@
 import logging
 import socket
-import json
 import argparse
-from json import JSONDecodeError
+from json import JSONDecodeError, loads
 from time import sleep
 from random import randrange
 
@@ -99,7 +98,7 @@ class PlayBot:
     def round_ends(self, data):
         self.heartbeat = 0
         try:
-            data = json.loads(data)
+            data = loads(data)
             self.log(data['BOT_1'])
         except JSONDecodeError as e:
             self.log(f'Exception: {e.msg} while parsing data.')
