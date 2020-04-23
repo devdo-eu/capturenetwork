@@ -44,16 +44,16 @@ class Battleground(threading.Thread):
 
     def saveData(self, bot_1, bot_2):
         self.fileLogName = f'{self.threadID}.json'
-        Path("./games/").mkdir(parents=True, exist_ok=True)
+        Path("./history/games/").mkdir(parents=True, exist_ok=True)
         game_json = tree()
         game_json['ROUNDS'] = []
         for round in self.gameRecord:
             game_json['ROUNDS'].append(round)
-        with open('games/' + self.fileLogName, 'w') as file:
+        with open('./history/games/' + self.fileLogName, 'w') as file:
             file.writelines(json.dumps(game_json, sort_keys=True, indent=4))
 
         try:
-            with open('game_list.json', 'r') as file:
+            with open('./history/game_list.json', 'r') as file:
                 game_list = ''
                 for line in file:
                     game_list += line
@@ -67,7 +67,7 @@ class Battleground(threading.Thread):
             game_list = tree()
             game_list['GAMES'] = []
 
-        with open('game_list.json', 'w') as file:
+        with open('./history/game_list.json', 'w') as file:
             data = tree()
             data['GAME_ID'] = self.threadID
             data['BOT_1']['NAME'] = bot_1.name()
