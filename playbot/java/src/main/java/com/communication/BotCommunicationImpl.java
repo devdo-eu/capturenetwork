@@ -10,15 +10,14 @@ import java.net.Socket;
 import java.util.Objects;
 
 @Log4j2
-public class BotCommunicationImp implements BotCommunication {
+public class BotCommunicationImpl implements BotCommunication {
 
-    private Socket socket = null;
     private PrintWriter output = null;
     private BufferedReader input = null;
 
-    public BotCommunicationImp(String host, int port) {
+    public BotCommunicationImpl(String host, int port) {
         try {
-            socket = new Socket(host, port);
+            Socket socket = new Socket(host, port);
             output = new PrintWriter(socket.getOutputStream(), true);
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (IOException e) {
@@ -28,7 +27,7 @@ public class BotCommunicationImp implements BotCommunication {
 
     @Override
     public Boolean isConnected() {
-        return !Objects.isNull(socket) && !Objects.isNull(output) && !Objects.isNull(input);
+        return !Objects.isNull(output) && !Objects.isNull(input);
     }
 
     @Override
@@ -37,7 +36,7 @@ public class BotCommunicationImp implements BotCommunication {
     }
 
     @Override
-    public String read() throws IOException{
+    public String read() throws IOException {
         char[] msg = new char[1024];
         int i = input.read(msg);
         return String.valueOf(msg);

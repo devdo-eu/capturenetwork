@@ -1,13 +1,14 @@
 package com;
 
 import com.communication.BotCommunication;
-import com.communication.BotCommunicationImp;
+import com.communication.BotCommunicationImpl;
 import com.enums.Move;
 import lombok.extern.log4j.Log4j2;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Random;
 
 @Log4j2
@@ -27,7 +28,7 @@ public class PlayBot {
     };
 
     PlayBot(String host, int port) {
-        communication = new BotCommunicationImp(host, port);
+        communication = new BotCommunicationImpl(host, port);
     }
 
     public void run() {
@@ -97,7 +98,11 @@ public class PlayBot {
         log.info(response);
 
         if (response.contains("Name?")) {
-            communication.send(myName.concat("_").concat(LocalDateTime.now().toString()));
+            String name = myName + "_" + LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
+
+            communication.send(name);
+            log.info("Logged as: " + name);
             isGameOn = true;
         }
     }
