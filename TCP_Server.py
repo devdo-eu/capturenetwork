@@ -77,11 +77,18 @@ class SelectorServer:
 
     def on_read(self, conn, mask):
         try:
-            data = conn.recv(1000)
+            data = ''
+            limit = 32000
+            while True:
+                limit -= 1
+                data += conn.recv(1).decode('utf-8')
+                if '\x04' in data or limit == 0:
+                    data = data.split('\x04')[0] + '\x04'
+                    break
             if data:
                 peername = conn.getpeername()
                 logging.info('got data from {}: {!r}'.format(peername, data))
-                self.__peerData[peername] = data.decode('utf-8')
+                self.__peerData[peername] = data
         except ConnectionResetError as e:
             logging.info(f'ConnectionResetErrorException: {e.strerror}')
             self.close_connection(conn)

@@ -61,9 +61,9 @@ class PlayBot:
     def login(self):
         if not self.game:
             return
-        sleep(0.2)
+        sleep(0.1)
         self.send('takeover')
-        sleep(0.2)
+        sleep(0.1)
         data = self.get_data()
         if 'Name?' in data:
             self.name()
@@ -71,7 +71,7 @@ class PlayBot:
             self.game = False
 
     def heartbeat_socket(self):
-        if self.heartbeat > 1500:
+        if self.heartbeat > 15000:
             self.send('ack')
             self.heartbeat = 0
         else:
@@ -84,6 +84,7 @@ class PlayBot:
                 self.heartbeat_socket()
                 buffor += self.socket.recv(1).decode('utf-8')
                 if '\x04' in buffor:
+                    self.heartbeat = 0
                     return buffor.split('\x04')[0]
         except BlockingIOError:
             self.game = True
@@ -103,10 +104,12 @@ class PlayBot:
         if self.my_move in data:
             self.log('Move ACK.')
             self.move_ok = True
+        else:
+            self.send(self.my_move)
 
     def round_ends(self, data):
-        self.heartbeat = 0
         try:
+            self.move_ok = False
             data = loads(data.replace('\x04', ''))
             self.log(data['BOT_1'])
         except JSONDecodeError as e:
@@ -130,7 +133,6 @@ class PlayBot:
 
             elif data.startswith('{"TIME": '):  # Phase 3
                 self.round_ends(data)
-                self.move_ok = False
 
             elif data.startswith('{"WINNER":'):  # After Skirmish
                 self.game_ends(data)

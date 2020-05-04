@@ -30,8 +30,8 @@ methodToPrize = {
         Method.NOP: 0
         }
 
-timeOfRound = 30  # milliseconds
-numberOfRounds = 1000
+timeOfRound = 50  # milliseconds
+numberOfRounds = 300
 
 methodToMethodResult = {
         Method.INFECT: {

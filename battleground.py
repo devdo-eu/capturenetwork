@@ -82,11 +82,11 @@ class Battleground(threading.Thread):
     def runRound(self):
         global trigger
         threads = []
+        self.timestamp = time.time()
         for bot in self.bots:
             bot.putMethod('NOP()', time.time(), False)
             threads.append(Sender(bot))
             threads[len(threads) - 1].start()
-        self.timestamp = time.time()
         trigger = True
         time.sleep(0.001)
         deadline = time.time() + rules.timeOfRound / 1000
