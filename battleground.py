@@ -27,7 +27,7 @@ class Sender(threading.Thread):
         global trigger
         while not trigger and time.time() < self.deadline:
             time.sleep(0.0001)
-        self.bot.sendMessage('Command>\r\n')
+        self.bot.sendMessage('Command>')
 
 
 class Battleground(threading.Thread):
@@ -81,7 +81,6 @@ class Battleground(threading.Thread):
 
     def runRound(self):
         global trigger
-        time.sleep(0.01)
         threads = []
         for bot in self.bots:
             bot.putMethod('NOP()', time.time(), False)
@@ -89,7 +88,7 @@ class Battleground(threading.Thread):
             threads[len(threads) - 1].start()
         self.timestamp = time.time()
         trigger = True
-        time.sleep(0.05)
+        time.sleep(0.001)
         deadline = time.time() + rules.timeOfRound / 1000
         while time.time() < deadline:
             data = self.server.get_data()
@@ -98,7 +97,7 @@ class Battleground(threading.Thread):
             for k, v in cData.items():
                 for bot in self.bots:
                     if bot.connection().getpeername() == k:
-                        bot.putMethod(v[:-2], timestamp)
+                        bot.putMethod(v[:-1], timestamp)
                         del data[k]
                         break
             time.sleep(0.001)
@@ -172,8 +171,8 @@ class Battleground(threading.Thread):
         summary['ROUND'] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
         msg_1, msg_2 = self.prepareBotMessages(summary)
 
-        self.bots[0].sendMessage(json.dumps(msg_1) + '\r\n')
-        self.bots[1].sendMessage(json.dumps(msg_2) + '\r\n')
+        self.bots[0].sendMessage(json.dumps(msg_1))
+        self.bots[1].sendMessage(json.dumps(msg_2))
         self.gameRecord.append(msg_1)
         logging.info(json.dumps(summary))
 

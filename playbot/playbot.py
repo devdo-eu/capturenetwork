@@ -25,6 +25,8 @@ class PlayBot:
         self.moves = ['NOP()', 'PATCH()', 'SCAN()', 'OVERLOAD()', 'OVERHEAR()', 'EXPLOIT()', 'INFECT()']
         self.host = host
         self.port = port
+        self.my_move = ''
+        self.move_ok = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.game = True
         self.heartbeat = 0
@@ -37,13 +39,13 @@ class PlayBot:
             logging.info(data.decode('utf-8'))
 
     def send(self, data):
-        data += '\r\n'
+        data += '\x04'
         self.socket.sendall(data.encode('utf-8'))
 
     def connect(self):
         try:
             self.socket.connect((self.host, self.port))
-            self.socket.settimeout(0.05)
+            self.socket.setblocking(False)
             self.log('Connected Successfully...')
         except OSError as e:
             self.log(f'Exception occurred when connecting to the server: {self.host}:{self.port}')
@@ -63,7 +65,7 @@ class PlayBot:
         self.send('takeover')
         sleep(0.2)
         data = self.get_data()
-        if b'Name?' in data:
+        if 'Name?' in data:
             self.name()
         else:
             self.game = False
@@ -76,32 +78,36 @@ class PlayBot:
             self.heartbeat += 1
 
     def get_data(self):
+        buffor = ''
         try:
-            self.heartbeat_socket()
-            data = self.socket.recv(1024)
-            return data
-        except socket.timeout:
-            return b''
+            while True:
+                self.heartbeat_socket()
+                buffor += self.socket.recv(1).decode('utf-8')
+                if '\x04' in buffor:
+                    return buffor.split('\x04')[0]
+        except BlockingIOError:
+            self.game = True
         except ConnectionResetError as e:
             self.log(e.strerror)
             self.game = False
-            return b''
         except ConnectionAbortedError as e:
             self.log(e.strerror)
             self.game = False
-            return b''
+        return buffor
 
     def move(self):
-        move = self.moves[randrange(1, len(self.moves))]
-        self.send(move)
+        self.my_move = self.moves[randrange(1, len(self.moves))]
+        self.send(self.my_move)
 
     def move_ack(self, data):
-        self.log('Move ACK.')
+        if self.my_move in data:
+            self.log('Move ACK.')
+            self.move_ok = True
 
     def round_ends(self, data):
         self.heartbeat = 0
         try:
-            data = loads(data)
+            data = loads(data.replace('\x04', ''))
             self.log(data['BOT_1'])
         except JSONDecodeError as e:
             self.log(f'Exception: {e.msg} while parsing data.')
@@ -113,17 +119,20 @@ class PlayBot:
     def play(self):
         while self.game:
             data = self.get_data()
+            if data == '':
+                sleep(0.01)
 
-            if b'Command>' in data:  # Phase 1
+            if 'Command>' in data:  # Phase 1
                 self.move()
 
-            elif data.startswith(b'Command: '):  # Phase 2
+            elif data.startswith('Command: ') and not self.move_ok:  # Phase 2
                 self.move_ack(data)
 
-            elif data.startswith(b'{"TIME": '):  # Phase 3
+            elif data.startswith('{"TIME": '):  # Phase 3
                 self.round_ends(data)
+                self.move_ok = False
 
-            elif data.startswith(b'{"WINNER":'):  # After Skirmish
+            elif data.startswith('{"WINNER":'):  # After Skirmish
                 self.game_ends(data)
 
     def run(self):

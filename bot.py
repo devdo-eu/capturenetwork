@@ -13,7 +13,7 @@ class Bot:
         self.__advantage = False
         self.__timestamp = time.time()
         self.__method = Method.NOP
-        self.sendMessage('Name?\r\n')
+        self.sendMessage('Name?')
 
     def __tree(self): return defaultdict(self.__tree)
 
@@ -26,7 +26,7 @@ class Bot:
         return ret
 
     def sendMessage(self, message):
-        self.__conn.send(message.encode('utf-8'))
+        self.__conn.send(f'{message}\x04'.encode('utf-8'))
 
     def method(self):
         return self.__method
@@ -64,4 +64,4 @@ class Bot:
         if rules.nameToMethod.get(method, 'NA') != 'NA':
             self.__method = rules.nameToMethod[method]
         if log:
-            self.sendMessage('Command: ' + rules.methodToName[self.__method] + '\r\n')
+            self.sendMessage('Command: ' + rules.methodToName[self.__method])
