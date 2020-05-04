@@ -43,7 +43,7 @@ class SelectorServer:
     def send_to_conn(self, peername, message):
         for conn in self.conns:
             if conn.getpeername() == peername:
-                conn.send(f'{message}\x04'.encode('utf-8'))
+                conn.send(f'{message}\x04'.encode())
 
     def on_accept(self, sock, mask):
         # This is a handler for the main_socket which is now listening, so we
@@ -51,7 +51,7 @@ class SelectorServer:
         conn, addr = self.main_socket.accept()
         logging.info('accepted connection from {0}'.format(addr))
         conn.setblocking(False)
-        conn.send(self.greetings.encode('utf-8'))
+        conn.send(self.greetings.encode())
 
         self.current_peers[conn.fileno()] = conn.getpeername()
         self.conns.append(conn)
@@ -81,7 +81,7 @@ class SelectorServer:
             limit = 32000
             while True:
                 limit -= 1
-                data += conn.recv(1).decode('utf-8')
+                data += conn.recv(1).decode()
                 if '\x04' in data or limit == 0:
                     data = data.split('\x04')[0]
                     break

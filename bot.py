@@ -26,7 +26,7 @@ class Bot:
         return ret
 
     def sendMessage(self, message):
-        self.__conn.send(f'{message}\x04'.encode('utf-8'))
+        self.__conn.send(f'{message}\x04'.encode())
 
     def method(self):
         return self.__method

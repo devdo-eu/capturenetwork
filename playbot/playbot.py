@@ -36,10 +36,10 @@ class PlayBot:
         if type(data) == dict or type(data) == str:
             logging.info(data)
         else:
-            logging.info(data.decode('utf-8'))
+            logging.info(data.decode())
 
     def send(self, data):
-        self.socket.sendall(f'{data}\x04'.encode('utf-8'))
+        self.socket.sendall(f'{data}\x04'.encode())
 
     def connect(self):
         try:
@@ -81,7 +81,7 @@ class PlayBot:
         try:
             while True:
                 self.heartbeat_socket()
-                buffor += self.socket.recv(1).decode('utf-8')
+                buffor += self.socket.recv(1).decode()
                 if '\x04' in buffor:
                     self.heartbeat = 0
                     return buffor.split('\x04')[0]
