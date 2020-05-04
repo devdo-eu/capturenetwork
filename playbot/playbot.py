@@ -57,8 +57,6 @@ class PlayBot:
         self.log(f'Logged in as: {name}.')
 
     def login(self):
-        if not self.game:
-            return
         sleep(0.1)
         self.send('takeover')
         sleep(0.1)
