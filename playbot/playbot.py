@@ -28,7 +28,7 @@ class PlayBot:
         self.my_move = ''
         self.move_ok = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.game = True
+        self.game = False
         self.heartbeat = 0
         self.run()
 
@@ -49,7 +49,6 @@ class PlayBot:
         except OSError as e:
             self.log(f'Exception occurred when connecting to the server: {self.host}:{self.port}')
             self.log(e.strerror)
-            self.game = False
             self.log('End of workout...')
 
     def name(self):
@@ -66,8 +65,7 @@ class PlayBot:
         data = self.get_data()
         if 'Name?' in data:
             self.name()
-        else:
-            self.game = False
+            self.game = True
 
     def heartbeat_socket(self):
         if self.heartbeat > 15000:
@@ -86,14 +84,15 @@ class PlayBot:
                     self.heartbeat = 0
                     return buffor.split('\x04')[0]
         except BlockingIOError:
-            self.game = True
+            return buffor
         except ConnectionResetError as e:
-            self.log(e.strerror)
-            self.game = False
+            buffor = e.strerror
         except ConnectionAbortedError as e:
-            self.log(e.strerror)
-            self.game = False
-        return buffor
+            buffor = e.strerror
+
+        self.log(buffor)
+        self.game = False
+        return ''
 
     def move(self):
         self.my_move = self.moves[randrange(1, len(self.moves))]

@@ -105,17 +105,17 @@ class Dispatcher(threading.Thread):
     def logBots(self):
         data = self.server.get_data()
         cData = copy.copy(data)
-        for k, v in cData.items():
-            if v == 'takeover':
+        for peer_address, message in cData.items():
+            if message == 'takeover':
                 for conn in copy.copy(self.server.conns):
                     try:
                         conn.getpeername()
                     except OSError:
                         self.server.close_connection(conn)
                         self.server.conns.remove(conn)
-                    if conn.getpeername() == k and self.bot_id < 2:
+                    if conn.getpeername() == peer_address and self.bot_id < 2:
                         self.server.conns.remove(conn)
-                        del data[k]
+                        del data[peer_address]
                         new_bot = bot.Bot(conn, self.bot_id, 'BOT_' + str(self.bot_id))
                         self.bots.append(new_bot)
                         self.bot_id += 1
@@ -124,9 +124,9 @@ class Dispatcher(threading.Thread):
                         break
             else:
                 for conn in self.server.conns:
-                    if conn.getpeername() == k:
-                        self.server.send_to_conn(k, 'Access denied')
+                    if conn.getpeername() == peer_address:
+                        self.server.send_to_conn(peer_address, 'Access denied')
                         self.server.close_connection(conn)
                         self.server.conns.remove(conn)
-                        del data[k]
+                        del data[peer_address]
         time.sleep(0.05)

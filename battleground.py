@@ -94,11 +94,11 @@ class Battleground(threading.Thread):
             data = self.server.get_data()
             cData = copy.copy(data)
             timestamp = time.time()
-            for k, v in cData.items():
+            for bot_address, method in cData.items():
                 for bot in self.bots:
-                    if bot.connection().getpeername() == k:
-                        bot.putMethod(v, timestamp)
-                        del data[k]
+                    if bot.connection().getpeername() == bot_address:
+                        bot.putMethod(method, timestamp)
+                        del data[bot_address]
                         break
             time.sleep(0.001)
         trigger = False

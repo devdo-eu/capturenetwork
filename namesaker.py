@@ -15,12 +15,12 @@ class Namesaker(threading.Thread):
         while not named:
             data = self.server.get_data()
             cData = copy.copy(data)
-            for k, v in cData.items():
+            for peer_address, name in cData.items():
                 try:
-                    if self.bot.connection().getpeername() == k:
-                        self.bot.putName(v)
-                        logging.info(f'Namesaker: Bot introduced himself as {v}')
-                        del data[k]
+                    if self.bot.connection().getpeername() == peer_address:
+                        self.bot.putName(name)
+                        logging.info(f'Namesaker: Bot introduced himself as {name}')
+                        del data[peer_address]
                         named = True
                 except OSError:
                     named = True
