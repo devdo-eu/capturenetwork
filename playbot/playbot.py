@@ -82,15 +82,12 @@ class PlayBot:
                     self.heartbeat = 0
                     return buffor.split('\x04')[0]
         except BlockingIOError:
-            return buffor
-        except ConnectionResetError as e:
-            buffor = e.strerror
-        except ConnectionAbortedError as e:
-            buffor = e.strerror
-
-        self.log(buffor)
-        self.game = False
-        return ''
+            self.game = True
+        except (ConnectionResetError, ConnectionAbortedError) as e:
+            buffor = ''
+            self.log(e.strerror)
+            self.game = False
+        return buffor
 
     def move(self):
         self.my_move = self.moves[randrange(1, len(self.moves))]
