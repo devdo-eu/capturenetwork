@@ -1,11 +1,17 @@
 import logging
 import socket
 import argparse
-from json import JSONDecodeError, loads
+from mind import Mind
 from time import sleep
-from random import randrange
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
+
+
+def log(data):
+    if type(data) == dict or type(data) == str:
+        logging.info(data)
+    else:
+        logging.info(data.decode())
 
 
 def parse():
@@ -19,24 +25,13 @@ def parse():
 
 class PlayBot:
     def __init__(self, host, port):
-        self.names = ['Mark', 'John', 'Alpha', 'Beta', 'Kappa',
-                      'Mk. II', 'HAL 9000', 'Multivac', 'Prime',
-                      'Legion', 'Cylons', 'A.L.I.E', 'Terminator']
-        self.moves = ['NOP()', 'PATCH()', 'SCAN()', 'OVERLOAD()', 'OVERHEAR()', 'EXPLOIT()', 'INFECT()']
         self.host = host
         self.port = port
-        self.my_move = ''
-        self.move_ok = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.game = False
         self.heartbeat = 0
+        self.game = False
+        self.mind = Mind(log, self.send)
         self.run()
-
-    def log(self, data):
-        if type(data) == dict or type(data) == str:
-            logging.info(data)
-        else:
-            logging.info(data.decode())
 
     def send(self, data):
         self.socket.sendall(f'{data}\x04'.encode())
@@ -45,16 +40,11 @@ class PlayBot:
         try:
             self.socket.connect((self.host, self.port))
             self.socket.setblocking(False)
-            self.log('Connected Successfully...')
+            log('Connected Successfully...')
         except OSError as e:
-            self.log(f'Exception occurred when connecting to the server: {self.host}:{self.port}')
-            self.log(e.strerror)
-            self.log('End of workout...')
-
-    def name(self):
-        name = self.names[randrange(len(self.names))]
-        self.send(name)
-        self.log(f'Logged in as: {name}.')
+            log(f'Exception occurred when connecting to the server: {self.host}:{self.port}')
+            log(e.strerror)
+            log('End of workout...')
 
     def login(self):
         sleep(0.1)
@@ -62,7 +52,7 @@ class PlayBot:
         sleep(0.1)
         data = self.get_data()
         if 'Name?' in data:
-            self.name()
+            self.mind.name()
             self.game = True
 
     def heartbeat_socket(self):
@@ -85,32 +75,9 @@ class PlayBot:
             self.game = True
         except (ConnectionResetError, ConnectionAbortedError) as e:
             buffor = ''
-            self.log(e.strerror)
+            log(e.strerror)
             self.game = False
         return buffor
-
-    def move(self):
-        self.my_move = self.moves[randrange(1, len(self.moves))]
-        self.send(self.my_move)
-
-    def move_ack(self, data):
-        if self.my_move in data:
-            self.log('Move ACK.')
-            self.move_ok = True
-        else:
-            self.send(self.my_move)
-
-    def round_ends(self, data):
-        try:
-            self.move_ok = False
-            data = loads(data)
-            self.log(data['BOT_1'])
-        except JSONDecodeError as e:
-            self.log(f'Exception: {e.msg} while parsing data.')
-
-    def game_ends(self, data):
-        self.game = False
-        self.log(data)
 
     def play(self):
         while self.game:
@@ -119,16 +86,16 @@ class PlayBot:
                 sleep(0.01)
 
             if 'Command>' in data:  # Phase 1
-                self.move()
+                self.mind.move()
 
-            elif data.startswith('Command: ') and not self.move_ok:  # Phase 2
-                self.move_ack(data)
+            elif data.startswith('Command: '):  # Phase 2
+                self.mind.move_ack(data)
 
             elif data.startswith('{"TIME": '):  # Phase 3
-                self.round_ends(data)
+                self.mind.round_ends(data)
 
             elif data.startswith('{"WINNER":'):  # After Skirmish
-                self.game_ends(data)
+                self.mind.game_ends(data)
 
     def run(self):
         self.connect()
