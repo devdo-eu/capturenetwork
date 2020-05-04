@@ -97,7 +97,7 @@ class Battleground(threading.Thread):
             for k, v in cData.items():
                 for bot in self.bots:
                     if bot.connection().getpeername() == k:
-                        bot.putMethod(v[:-1], timestamp)
+                        bot.putMethod(v, timestamp)
                         del data[k]
                         break
             time.sleep(0.001)

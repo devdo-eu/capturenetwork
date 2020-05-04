@@ -43,7 +43,7 @@ class SelectorServer:
     def send_to_conn(self, peername, message):
         for conn in self.conns:
             if conn.getpeername() == peername:
-                conn.send(message.encode('utf-8'))
+                conn.send(f'{message}\x04'.encode('utf-8'))
 
     def on_accept(self, sock, mask):
         # This is a handler for the main_socket which is now listening, so we
@@ -83,7 +83,7 @@ class SelectorServer:
                 limit -= 1
                 data += conn.recv(1).decode('utf-8')
                 if '\x04' in data or limit == 0:
-                    data = data.split('\x04')[0] + '\x04'
+                    data = data.split('\x04')[0]
                     break
             if data:
                 peername = conn.getpeername()

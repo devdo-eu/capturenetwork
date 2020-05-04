@@ -106,7 +106,7 @@ class Dispatcher(threading.Thread):
         data = self.server.get_data()
         cData = copy.copy(data)
         for k, v in cData.items():
-            if v == 'takeover\x04':
+            if v == 'takeover':
                 for conn in copy.copy(self.server.conns):
                     try:
                         conn.getpeername()
@@ -125,7 +125,7 @@ class Dispatcher(threading.Thread):
             else:
                 for conn in self.server.conns:
                     if conn.getpeername() == k:
-                        self.server.send_to_conn(k, 'Access denied\x04')
+                        self.server.send_to_conn(k, 'Access denied')
                         self.server.close_connection(conn)
                         self.server.conns.remove(conn)
                         del data[k]

@@ -18,8 +18,8 @@ class Namesaker(threading.Thread):
             for k, v in cData.items():
                 try:
                     if self.bot.connection().getpeername() == k:
-                        self.bot.putName(v[:-1])
-                        logging.info(f'Namesaker: Bot introduced himself as {v[:-1]}')
+                        self.bot.putName(v)
+                        logging.info(f'Namesaker: Bot introduced himself as {v}')
                         del data[k]
                         named = True
                 except OSError:
