@@ -58,6 +58,7 @@ It is developed by [Paweł Polakiewicz](https://github.com/ppolakiewicz)
 ## Authors
 
 * **Grzegorz Maciaszek** - *Initial work* - [Devdo.eu](https://github.com/devdo-eu)
+* **Paweł Polakiewicz** - *Colaboration*  - [Ppolakiewicz](https://github.com/ppolakiewicz)
 
 ## License
 
