@@ -39,8 +39,7 @@ class PlayBot:
             logging.info(data.decode('utf-8'))
 
     def send(self, data):
-        data += '\x04'
-        self.socket.sendall(data.encode('utf-8'))
+        self.socket.sendall(f'{data}\x04'.encode('utf-8'))
 
     def connect(self):
         try:
@@ -110,7 +109,7 @@ class PlayBot:
     def round_ends(self, data):
         try:
             self.move_ok = False
-            data = loads(data.replace('\x04', ''))
+            data = loads(data)
             self.log(data['BOT_1'])
         except JSONDecodeError as e:
             self.log(f'Exception: {e.msg} while parsing data.')
