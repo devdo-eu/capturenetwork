@@ -6,23 +6,47 @@ from json import JSONDecodeError, loads
 
 
 class Mind:
+    """
+    Class contains all the methods responsible for the logic
+    that guides the bot's actions during the course of the game
+    """
     def __init__(self, log_method, send_method):
+        """
+        Constructor of bot mind. Here you can initialize all variables
+        which you need to store for proper logic.
+        :param log_method: Methods to log data. It tis given by bot API
+        :param send_method: Method given by bot API, used for communication
+        """
         self.__log = log_method
         self.__send = send_method
-        self.__my_name = f'ExampleBot_{randrange(500)}'
         self.__moves = ['NOP()', 'PATCH()', 'SCAN()', 'OVERLOAD()', 'OVERHEAR()', 'EXPLOIT()', 'INFECT()']
+        self.__my_name = f'ExampleBot_{randrange(500)}'
         self.__my_move = ''
         self.__move_ok = False
 
     def name(self):
-        self.__send(self.__my_name)
+        """
+        Method used to send name to battle server. Unique name of the bot allows
+        it to be easily identified when viewing record from the game.
+        Should always end with 'self.__send(self.__my_name)'
+        """
         self.__log(f'Logged in as: {self.__my_name}.')
+        self.__send(self.__my_name)
 
     def move(self):
+        """
+        Method used at PHASE 1. Responsible for selecting the next round's play / movement
+        Should always end with 'self.__send(self.__my_move)'
+        """
         self.__my_move = self.__moves[randrange(1, len(self.__moves))]
         self.__send(self.__my_move)
 
     def move_ack(self, data):
+        """
+        Method used at PHASE 2. Responsible for checking if battle server
+        receive correctly move chosen by bot in PHASE 1.
+        :param data: string object which contains move that the server assigns to this bot
+        """
         if self.__move_ok:
             return
 
@@ -33,6 +57,10 @@ class Mind:
             self.__send(self.__my_move)
 
     def round_ends(self, data):
+        """
+        Method used at PHASE 3. Responsible for gathering information about flow of the game
+        :param data: JSON object contains round summary.
+        """
         try:
             self.__move_ok = False
             data = loads(data)
@@ -41,4 +69,8 @@ class Mind:
             self.__log(f'Exception: {e.msg} while parsing data.')
 
     def game_ends(self, data):
+        """
+        Method used after Skirmish. Responsible for saving important data after game ends.
+        :param data: JSON object contains short game summary
+        """
         self.__log(data)
