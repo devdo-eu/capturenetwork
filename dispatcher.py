@@ -43,7 +43,7 @@ class Dispatcher(threading.Thread):
                 else:
                     logging.info('game_list.json file is empty, GAME_ID set to 0.')
         except FileNotFoundError:
-            logging.info(self.name + ": No game_list.json file, GAME_ID set to 0.")
+            logging.info(self.name + ': No game_list.json file, GAME_ID set to 0.')
 
     def createBattle(self, id, server):
         name = f'Battleground #{str(id)}'
@@ -58,14 +58,14 @@ class Dispatcher(threading.Thread):
             data['RULES']['ROUND_TIME_MS'] = rules.timeOfRound
             data['RULES']['ROUNDS'] = rules.numberOfRounds
             file.writelines(json.dumps(data, sort_keys=True, indent=4))
-        logging.info(self.name + ": Rules saved.")
+        logging.info(self.name + ': Rules saved.')
 
     def sendGo(self, force=False):
         if self.heartbeat > 1500 or force:
             self.heartbeat = 0
             for bot_ in copy.copy(self.bots):
                 try:
-                    bot_.sendMessage("GO\r\n")
+                    bot_.sendMessage('GO')
                 except ConnectionResetError:
                     self.bots.remove(bot_)
                     self.bot_id -= 1
@@ -79,11 +79,11 @@ class Dispatcher(threading.Thread):
             self.heartbeat += 1
 
     def run(self):
-        logging.info(self.name + ": Loads GAME_ID...")
+        logging.info(self.name + ': Loads GAME_ID...')
         self.loadData()
-        logging.info(self.name + ": Writes rules.json...")
+        logging.info(self.name + ': Writes rules.json...')
         self.saveRules()
-        logging.info(self.name + ": Ready.")
+        logging.info(self.name + ': Ready.')
         while self.server.closed is False:
             try:
                 self.logBots()
@@ -93,29 +93,29 @@ class Dispatcher(threading.Thread):
                     self.sendGo(True)
 
                 if len(self.bots) >= 2:
-                    logging.info("Game can be played.....")
+                    logging.info('Game can be played.....')
                     self.threads.append(self.createBattle(self.games, self.server))
                     self.games += 1
                     self.bot_id = 0
             except OSError as e:
-                logging.info(f"OSError Exception: {e.strerror}")
+                logging.info(f'OSError Exception: {e.strerror}')
         for t in self.threads:
             t.join()
 
     def logBots(self):
         data = self.server.get_data()
         cData = copy.copy(data)
-        for k, v in cData.items():
-            if v[:-2] == 'takeover':
+        for peer_address, message in cData.items():
+            if message == 'takeover':
                 for conn in copy.copy(self.server.conns):
                     try:
                         conn.getpeername()
                     except OSError:
                         self.server.close_connection(conn)
                         self.server.conns.remove(conn)
-                    if conn.getpeername() == k and self.bot_id < 2:
+                    if conn.getpeername() == peer_address and self.bot_id < 2:
                         self.server.conns.remove(conn)
-                        del data[k]
+                        del data[peer_address]
                         new_bot = bot.Bot(conn, self.bot_id, 'BOT_' + str(self.bot_id))
                         self.bots.append(new_bot)
                         self.bot_id += 1
@@ -124,9 +124,9 @@ class Dispatcher(threading.Thread):
                         break
             else:
                 for conn in self.server.conns:
-                    if conn.getpeername() == k:
-                        self.server.send_to_conn(k, 'Access denied\r\n')
+                    if conn.getpeername() == peer_address:
+                        self.server.send_to_conn(peer_address, 'Access denied')
                         self.server.close_connection(conn)
                         self.server.conns.remove(conn)
-                        del data[k]
+                        del data[peer_address]
         time.sleep(0.05)
