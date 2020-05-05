@@ -1,6 +1,7 @@
 # How to make my PlayBot a killer...
 
-To start your adventure with Capture The Network, you need to modify your PlayBot template.
+To start your adventure with Capture The Network, you need to modify your PlayBot template.<br>
+All what you need to modify is `mind.py` file.
 
 One game consists of a limited number of rounds. Each round consists of three phases:
  * Battle.Server sends request for action in the current round.
@@ -9,33 +10,42 @@ One game consists of a limited number of rounds. Each round consists of three ph
  
 After Skirmish ends your bot can do something (for example save some data)<br>
 
-Below is a method containing main loop which controls bot's behaviour during the battle.
+Below is a method containing main loop which controls bot's behaviour during the battle.<br>
+You will find this method inside `playbot.py` file
 
 ```python
 def play(self):
     while self.game:
         data = self.get_data()
+        if data == '':
+            sleep(0.001)
 
-        if b'Command>' in data:  # Phase 1
-            self.move()
+        if 'Command>' in data:  # Phase 1
+            self.mind.move()
 
-        elif data.startswith(b'Command: '):  # Phase 2
-            self.move_ack(data)
+        elif data.startswith('Command: '):  # Phase 2
+            self.mind.move_ack(data)
 
-        elif data.startswith(b'{"TIME": '):  # Phase 3
-            self.round_ends(data)
+        elif data.startswith('{"TIME": '):  # Phase 3
+            self.mind.round_ends(data)
 
-        elif data.startswith(b'{"WINNER":'):  # After Skirmish
-            self.game_ends(data)
+        elif data.startswith('{"WINNER":'):  # After Skirmish
+            self.mind.game_ends(data)
+            self.game = False
 ```
 
 ## Phase 1 - request for action
 
-When Battle.Server sends request for action PlayBot template will call self.move() method:
+When Battle.Server sends request for action<br>
+PlayBot template will call `move(self)` method from `mind.py`:
 ```python
 def move(self):
-    move = self.moves[randrange(1, len(self.moves))]
-    self.send(move)
+    """
+    Method used at PHASE 1. Responsible for selecting the next round's play / movement
+    Should always end with 'self.__send(self.__my_move)'
+    """
+    self.__my_move = self.__moves[randrange(1, len(self.__moves))]
+    self.__send(self.__my_move)
 ```
 
 In the template, the declared movement is selected randomly.<br>
@@ -100,34 +110,50 @@ Faster winner mechanics is controlled by table below:
 
 ## Phase 2 - confirmation of action
 
-This phase allows you to check if the sent action has reached the server and correct the error if necessary.<br>
+This phase allows you to check if the action sent has reached the server and correct the error if necessary.<br>
 If the bot changes its mind, this is the phase to change the selected action.
  ```python
 def move_ack(self, data):
-    self.log('Move ACK.')
+    """
+    Method used at PHASE 2. Responsible for checking if battle server
+    receive correctly move chosen by bot in PHASE 1.
+    :param data: string object which contains move that the server assigns to this bot
+    """
+    if self.__move_ok:
+        return
+
+    if self.__my_move in data:
+        self.__log('Move ACK.')
+        self.__move_ok = True
+    else:
+        self.__send(self.__my_move)
 ```
-`data` argument contains data from Battle.Server in format `b'Command: METHOD()\r\n'`<br>
-For example: `b'Command: NOP()\r\n'`
+`data` argument contains data from Battle.Server in format `'Command: METHOD()\x04'`<br>
+For example: `'Command: NOP()\x04'`
 
 ## Phase 3 - summary after round is over
 
 Now it's time to collect and analyze what happened during the round.<br>
 Battle.Server sends complete data about PlayBot moves, time of reaction and advantage gain.<br>
-This information can be used to tweak PlayBot algorithm and to  change its tactics.
+This information can be used to tweak PlayBot algorithm and to change its tactics.
 ```python
 def round_ends(self, data):
-    self.heartbeat = 0
+    """
+    Method used at PHASE 3. Responsible for gathering information about flow of the game
+    :param data: JSON object contains round summary.
+    """
     try:
-        data = json.loads(data)
-        self.log(data['BOT_1'])
+        self.__move_ok = False
+        data = loads(data)
+        self.__log(data['BOT_1'])
     except JSONDecodeError as e:
-        self.log(f'Exception: {e.msg} while parsing data.')
+        self.__log(f'Exception: {e.msg} while parsing data.')
 ```
 You need to put data processing logic between try-except.<br>
 If data will be corrupted then lines after `except` will be called.<br>
-So you can prepare your bot for that circumstances
+So you can prepare your bot for that circumstances.
 
-After line `data = json.loads(data)` all information from Battle.Server will be parsed to object.<br>
+After line `data = loads(data)` all information from Battle.Server will be parsed to object.<br>
 Bot can get access to distinct field by calling `data[FIELD]`.<br>
 
 For example: <br>
@@ -164,16 +190,16 @@ The summary of the round is in the following json format:
 Field `'ADVANTAGE'` contains value which corresponds to:
 
 ```python
-    TIME = 0
-    BOT_1 = 1
-    BOT_2 = 2
+TIME = 0
+BOT_1 = 1
+BOT_2 = 2
 ```
 
 Value of `'WINNER` field corresponds to:
 ```python
-    DRAW = 0
-    BOT_1 = 1
-    BOT_2 = 2
+DRAW = 0
+BOT_1 = 1
+BOT_2 = 2
 ```
 
 ## After Skirmish
@@ -182,11 +208,12 @@ Here is place to save some data and do after thoughts.
 
 ```python
 def game_ends(self, data):
-    self.game = False
-    self.log(data)
+    """
+    Method used after Skirmish. Responsible for saving important data after game ends.
+    :param data: JSON object contains short game summary
+    """
+    self.__log(data)
 ```
-
-Line `self.game` needs to be called. If it will be erased, then Bot will not end the play loop.<br>
 
 After game ends Battle.Server will send json similar to this one:
 ```json
@@ -205,7 +232,11 @@ After game ends Battle.Server will send json similar to this one:
 To give special, selected name to your PlayBot you need to modify method below:
 ```python
 def name(self):
-    name = self.names[randrange(len(self.names))]
-    self.send(name)
-    self.log(f'Logged in as: {name}.')
+    """
+    Method used to send name to battle server. Unique name of the bot allows
+    it to be easily identified when viewing record from the game.
+    Should always end with 'self.__send(self.__my_name)'
+    """
+    self.__log(f'Logged in as: {self.__my_name}.')
+    self.__send(self.__my_name)
 ```

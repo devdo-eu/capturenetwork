@@ -83,7 +83,7 @@ class PlayBot:
         while self.game:
             data = self.get_data()
             if data == '':
-                sleep(0.01)
+                sleep(0.001)
 
             if 'Command>' in data:  # Phase 1
                 self.mind.move()
@@ -96,6 +96,7 @@ class PlayBot:
 
             elif data.startswith('{"WINNER":'):  # After Skirmish
                 self.mind.game_ends(data)
+                self.game = False
 
     def run(self):
         self.connect()
