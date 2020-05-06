@@ -1,5 +1,6 @@
 package com.communication;
 
+import com.core.BotCommunication;
 import lombok.extern.log4j.Log4j2;
 
 import java.io.BufferedReader;

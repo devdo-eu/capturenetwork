@@ -1,5 +1,7 @@
 package com;
 
+import com.core.PlayBot;
+
 public class RunBot {
 
     /**

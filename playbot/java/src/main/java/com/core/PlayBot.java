@@ -1,34 +1,24 @@
-package com;
+package com.core;
 
-import com.communication.BotCommunication;
 import com.communication.BotCommunicationImpl;
-import com.enums.Move;
+import com.logic.BotLogicImpl;
 import lombok.extern.log4j.Log4j2;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Random;
 
 @Log4j2
 public class PlayBot {
     private final String myName = "JavaPlayBot";
     private final BotCommunication communication;
+    private final BotLogic botLogic;
     private boolean isGameOn = false;
 
-    private Move[] moves = new Move[]{
-            Move.EXPLOIT,
-            Move.INFECT,
-            Move.NOP,
-            Move.OVERHEAR,
-            Move.OVERLOAD,
-            Move.PATCH,
-            Move.SCAN
-    };
 
-    PlayBot(String host, int port) {
+    public PlayBot(String host, int port) {
         communication = new BotCommunicationImpl(host, port);
+        botLogic = new BotLogicImpl();
     }
 
     public void run() {
@@ -53,37 +43,23 @@ public class PlayBot {
 
             //Phase 1
             if (serverCommand.contains(COMMAND_REQUEST))
-                move();
+                communication.send(botLogic.move());
                 //Phase 2
             else if (serverCommand.startsWith(VALIDATE_REQUEST))
-                validateMove(serverCommand);
+                if (botLogic.validateMove(serverCommand))
+                    log.info("Server received my move");
+                else
+                    communication.send(botLogic.getLastMove());
                 //Phase 3
             else if (serverCommand.startsWith(ROUND_ENDS))
-                roundEnds(serverCommand);
+                botLogic.roundsEnd(serverCommand);
                 //After Skirmish
-            else if (serverCommand.startsWith(GAME_ENDS))
-                gameEnds(serverCommand);
+            else if (serverCommand.startsWith(GAME_ENDS)) {
+                botLogic.gameEnds(serverCommand);
+                isGameOn = false;
+            }
+
         }
-    }
-
-
-    private void move() {
-        Random random = new Random();
-        communication.send(moves[random.nextInt(moves.length)].command);
-    }
-
-    private void validateMove(String data) {
-        log.info(data);
-    }
-
-    private void roundEnds(String data) {
-        JSONObject json = new JSONObject(data);
-        log.info(json.getJSONObject("BOT_1"));
-    }
-
-    private void gameEnds(String data) {
-        isGameOn = false;
-        log.info(data);
     }
 
     private void readGreetings() {
