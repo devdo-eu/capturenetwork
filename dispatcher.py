@@ -120,7 +120,9 @@ class Dispatcher(threading.Thread):
                         self.bots.append(new_bot)
                         self.bot_id += 1
                         logging.info("Dispatcher: Bot Connected...")
-                        self.threads.append(Namesaker(new_bot, self.server))
+                        nameseeker = Namesaker(new_bot, self.server)
+                        nameseeker.start()
+                        self.threads.append(nameseeker)
                         break
             else:
                 for conn in self.server.conns:
