@@ -31,10 +31,11 @@ class PlayBot:
         self.heartbeat = 0
         self.game = False
         self.mind = Mind(log)
+        self.EOT = '\n\x04\n'
         self.run()
 
     def send(self, data):
-        self.socket.sendall(f'{data}\x04'.encode())
+        self.socket.sendall(f'{data}{self.EOT}'.encode())
 
     def connect(self):
         try:
@@ -79,9 +80,9 @@ class PlayBot:
             while True:
                 self.heartbeat_socket()
                 buffor += self.socket.recv(1).decode()
-                if '\x04' in buffor:
+                if self.EOT in buffor:
                     self.heartbeat = 0
-                    return buffor.split('\x04')[0]
+                    return buffor.split(self.EOT)[0]
         except BlockingIOError:
             self.game = True
         except (ConnectionResetError, ConnectionAbortedError) as e:
@@ -100,6 +101,7 @@ class PlayBot:
             data = self.get_data()
             if data == '':
                 sleep(0.001)
+                continue
 
             if 'Command>' in data:  # Phase 1
                 self.send(self.mind.move())
