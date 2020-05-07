@@ -51,7 +51,7 @@ class SelectorServer:
         conn, addr = self.main_socket.accept()
         logging.info('accepted connection from {0}'.format(addr))
         conn.setblocking(False)
-        conn.send(self.greetings.encode())
+        conn.send(f'{self.greetings}\x04'.encode())
 
         self.current_peers[conn.fileno()] = conn.getpeername()
         self.conns.append(conn)
