@@ -4,8 +4,9 @@
 name: Java CI with Maven
 
 on:
-#   push:
-#     branches: [ master ]
+  push:
+    branches: [ master ]
+    paths: 'playbot/java/*'
   pull_request:
     branches: [ master ]
     paths: 'playbot/java/*'
