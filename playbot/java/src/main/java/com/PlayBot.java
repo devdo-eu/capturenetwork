@@ -24,6 +24,7 @@ public class PlayBot {
             Move.OVERHEAR,
             Move.OVERLOAD,
             Move.PATCH,
+            Move.SCAN,
             Move.SCAN
     };
 
