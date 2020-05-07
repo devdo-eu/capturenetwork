@@ -2,7 +2,7 @@ import logging
 import socket
 import argparse
 from mind import Mind
-from time import sleep
+from time import sleep, time
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
@@ -30,7 +30,7 @@ class PlayBot:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.heartbeat = 0
         self.game = False
-        self.mind = Mind(log, self.send)
+        self.mind = Mind(log)
         self.run()
 
     def send(self, data):
@@ -47,12 +47,23 @@ class PlayBot:
             log('End of workout...')
 
     def login(self):
+        deadline = time() + 5
+        data = ''
+        while data == '' and time() < deadline:
+            data = self.get_data()
+            sleep(0.1)
+        if '<<<Battle.Server>>>' not in data:
+            raise Exception('Wrong server. End of workout...')
+
         sleep(0.1)
         self.send('takeover')
         sleep(0.1)
-        data = self.get_data()
+        data = ''
+        while data == '' and time() < deadline:
+            data = self.get_data()
+            sleep(0.1)
         if 'Name?' in data:
-            self.mind.name()
+            self.send(self.mind.name())
             self.game = True
 
     def heartbeat_socket(self):
