@@ -13,6 +13,7 @@ class Bot:
         self.__advantage = False
         self.__timestamp = time.time()
         self.__method = Method.NOP
+        self.__EOT = '\n\x04\n'
         self.sendMessage('Name?')
 
     def __tree(self): return defaultdict(self.__tree)
@@ -26,7 +27,7 @@ class Bot:
         return ret
 
     def sendMessage(self, message):
-        self.__conn.send(f'{message}\x04'.encode())
+        self.__conn.send(f'{message}{self.__EOT}'.encode())
 
     def method(self):
         return self.__method
