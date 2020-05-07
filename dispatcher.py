@@ -66,6 +66,7 @@ class Dispatcher(threading.Thread):
             for bot_ in copy.copy(self.bots):
                 try:
                     bot_.sendMessage('GO')
+                    bot_.sendMessage('GO')
                 except ConnectionResetError:
                     self.bots.remove(bot_)
                     self.bot_id -= 1
@@ -91,6 +92,7 @@ class Dispatcher(threading.Thread):
 
                 if len(self.bots) >= 2:
                     self.sendGo(True)
+                    time.sleep(1)
 
                 if len(self.bots) >= 2:
                     logging.info('Game can be played.....')
@@ -120,9 +122,9 @@ class Dispatcher(threading.Thread):
                         self.bots.append(new_bot)
                         self.bot_id += 1
                         logging.info("Dispatcher: Bot Connected...")
-                        nameseeker = Namesaker(new_bot, self.server)
-                        nameseeker.start()
-                        self.threads.append(nameseeker)
+                        name_seeker = Namesaker(new_bot, self.server)
+                        name_seeker.start()
+                        self.threads.append(name_seeker)
                         break
             else:
                 for conn in self.server.conns:
