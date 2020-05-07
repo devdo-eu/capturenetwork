@@ -1,6 +1,7 @@
 import logging
 import threading
 import copy
+import time
 
 
 class Namesaker(threading.Thread):
@@ -8,11 +9,11 @@ class Namesaker(threading.Thread):
         threading.Thread.__init__(self)
         self.server = server
         self.bot = bot
-        self.run()
 
     def run(self):
         named = False
-        while not named:
+        deadline = time.time() + 5
+        while not named and time.time() < deadline:
             data = self.server.get_data()
             cData = copy.copy(data)
             for peer_address, name in cData.items():
@@ -24,3 +25,5 @@ class Namesaker(threading.Thread):
                         named = True
                 except OSError:
                     named = True
+        if not named:
+            logging.info('Bot stay without name...')
