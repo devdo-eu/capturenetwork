@@ -5,6 +5,34 @@ import socket
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
 
+class Connection:
+    def __init__(self, conn):
+        self.EOT = '\n\x04\n'
+        self.conn = conn
+
+    def get(self):
+        return self.conn
+
+    def getpeername(self):
+        return self.conn.getpeername()
+
+    def send(self, message):
+        self.conn.send(f'{message}{self.EOT}'.encode())
+
+    def recv(self):
+        data = ''
+        limit = 32000
+        while True:
+            limit -= 1
+            data += self.conn.recv(1).decode()
+            if self.EOT in data or limit == 0:
+                data = data.split(self.EOT)[0]
+                break
+        if data:
+            logging.info(f'got data from {self.conn.getpeername()}: {data}')
+        return data
+
+
 class SelectorServer:
     def __init__(self, greetings, host, port):
         # Create the main socket that accepts incoming connections and start
@@ -16,7 +44,6 @@ class SelectorServer:
         # self.main_socket.setblocking(False)
         self.greetings = greetings
         self.closed = False
-        self.EOT = '\n\x04\n'
 
         # Create the selector object that will dispatch events. Register
         # interest in read events, that include incoming connections.
@@ -44,51 +71,45 @@ class SelectorServer:
     def send_to_conn(self, peername, message):
         for conn in self.conns:
             if conn.getpeername() == peername:
-                conn.send(f'{message}{self.EOT}'.encode())
+                conn.send(message)
 
     def on_accept(self, sock, mask):
         # This is a handler for the main_socket which is now listening, so we
         # know it's ready to accept a new connection.
         conn, addr = self.main_socket.accept()
+        conn = Connection(conn)
         logging.info('accepted connection from {0}'.format(addr))
-        conn.setblocking(False)
-        conn.send(f'{self.greetings}{self.EOT}'.encode())
+        conn.get().setblocking(False)
+        conn.send(self.greetings)
 
-        self.current_peers[conn.fileno()] = conn.getpeername()
+        self.current_peers[conn.get().fileno()] = conn.getpeername()
         self.conns.append(conn)
         # Register interest in read events on the new socket, dispatching to
         # self.on_read
-        self.selector.register(fileobj=conn, events=selectors.EVENT_READ,
+        self.selector.register(fileobj=conn.get(), events=selectors.EVENT_READ,
                                data=self.on_read)
 
     def close_connection(self, conn):
         # We can't ask conn for getpeername() here, because the peer may no
         # longer exist (hung up); instead we use our own mapping of socket
         # fds to peer names - our socket fd is still open.
-        if self.current_peers.get(conn.fileno(), 'NA') == 'NA':
+        if self.current_peers.get(conn.get().fileno(), 'NA') == 'NA':
             return
-        peername = self.current_peers[conn.fileno()]
+        peername = self.current_peers[conn.get().fileno()]
         logging.info('closing connection to {0}'.format(peername))
-        del self.current_peers[conn.fileno()]
-        self.selector.unregister(conn)
-        conn.close()
+        del self.current_peers[conn.get().fileno()]
+        self.selector.unregister(conn.get())
+        conn.get().close()
         self.current_number_of_peers -= 1
         logging.info('Num active peers = {0}'.format(
             len(self.current_peers)))
 
     def on_read(self, conn, mask):
+        conn = Connection(conn)
         try:
-            data = ''
-            limit = 32000
-            while True:
-                limit -= 1
-                data += conn.recv(1).decode()
-                if self.EOT in data or limit == 0:
-                    data = data.split(self.EOT)[0]
-                    break
+            data = conn.recv()
             if data:
                 peername = conn.getpeername()
-                logging.info('got data from {}: {!r}'.format(peername, data))
                 self.__peerData[peername] = data
         except ConnectionResetError as e:
             logging.info(f'ConnectionResetErrorException: {e.strerror}')
