@@ -79,6 +79,11 @@ class PlayBot:
             self.game = False
         return buffor
 
+    def move_ack(self, data):
+        ack = self.mind.move_ack(data)
+        if ack != '':
+            self.send(ack)
+
     def play(self):
         while self.game:
             data = self.get_data()
@@ -86,10 +91,10 @@ class PlayBot:
                 sleep(0.001)
 
             if 'Command>' in data:  # Phase 1
-                self.mind.move()
+                self.send(self.mind.move())
 
             elif data.startswith('Command: '):  # Phase 2
-                self.mind.move_ack(data)
+                self.move_ack(data)
 
             elif data.startswith('{"TIME": '):  # Phase 3
                 self.mind.round_ends(data)

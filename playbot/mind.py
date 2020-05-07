@@ -10,15 +10,13 @@ class Mind:
     Class contains all the methods responsible for the logic
     that guides the bot's actions during the course of the game
     """
-    def __init__(self, log_method, send_method):
+    def __init__(self, log_method):
         """
         Constructor of bot mind. Here you can initialize all variables
         which you need to store for proper logic.
         :param log_method: Methods to log data. It tis given by bot API
-        :param send_method: Method given by bot API, used for communication
         """
         self.__log = log_method
-        self.__send = send_method
         self.__moves = ['NOP()', 'PATCH()', 'SCAN()', 'OVERLOAD()', 'OVERHEAR()', 'EXPLOIT()', 'INFECT()']
         self.__my_name = f'ExampleBot_{randrange(500)}'
         self.__my_move = ''
@@ -28,33 +26,35 @@ class Mind:
         """
         Method used to send name to battle server. Unique name of the bot allows
         it to be easily identified when viewing record from the game.
-        Should always end with 'self.__send(self.__my_name)'
+        :return string object with name of bot
         """
         self.__log(f'Logged in as: {self.__my_name}.')
-        self.__send(self.__my_name)
+        return self.__my_name
 
     def move(self):
         """
         Method used at PHASE 1. Responsible for selecting the next round's play / movement
-        Should always end with 'self.__send(self.__my_move)'
+        :return string object with move chosen by bot
         """
         self.__my_move = self.__moves[randrange(1, len(self.__moves))]
-        self.__send(self.__my_move)
+        return self.__my_move
 
     def move_ack(self, data):
         """
         Method used at PHASE 2. Responsible for checking if battle server
         receive correctly move chosen by bot in PHASE 1.
         :param data: string object which contains move that the server assigns to this bot
+        :return empty string if everything is ok / string with move if bot want to change his move
         """
         if self.__move_ok:
-            return
+            return ''
 
         if self.__my_move in data:
             self.__log('Move ACK.')
             self.__move_ok = True
+            return ''
         else:
-            self.__send(self.__my_move)
+            return self.__my_move
 
     def round_ends(self, data):
         """
