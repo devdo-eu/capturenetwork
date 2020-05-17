@@ -8,7 +8,7 @@ import json
 import copy
 from datetime import datetime
 from pathlib import Path
-from enumeration import RoundWinner, RoundAdvantage
+from enumeration import RoundWinner, RoundAdvantage, GamesListFileField
 
 
 def tree(): return defaultdict(tree)
@@ -46,10 +46,10 @@ class Battleground(threading.Thread):
         self.fileLogName = f'{self.threadID}.json'
         Path("./history/games/").mkdir(parents=True, exist_ok=True)
         game_json = tree()
-        game_json['ROUNDS'] = []
+        game_json[GamesListFileField.ROUNDS.value] = []
         for round in self.gameRecord:
-            game_json['ROUNDS'].append(round)
-        with open('./history/games/' + self.fileLogName, 'w') as file:
+            game_json[GamesListFileField.ROUNDS.value].append(round)
+        with open(f'./history/games/{self.fileLogName}', 'w') as file:
             file.writelines(json.dumps(game_json, sort_keys=True, indent=4))
 
         try:
@@ -58,25 +58,23 @@ class Battleground(threading.Thread):
                 for line in file:
                     game_list += line
                 game_list = json.loads(game_list)
-        except FileNotFoundError:
-            logging.info('No game_list.json file. Creating file.')
-            game_list = tree()
-            game_list['GAMES'] = []
-        except json.JSONDecodeError:
-            logging.info('Bad format inside game_list.json file.')
-            game_list = tree()
-            game_list['GAMES'] = []
+        except (FileNotFoundError, json.JSONDecodeError) as error:
+            if isinstance(error, FileNotFoundError):
+                logging.info('No game_list.json file. Creating file.')
+            else:
+                logging.info('Bad format inside game_list.json file.')
+            game_list = []
 
         with open('./history/game_list.json', 'w') as file:
             data = tree()
-            data['GAME_ID'] = self.threadID
-            data['BOT_1']['NAME'] = bot_1.name()
-            data['BOT_1']['POINTS'] = bot_1.points()
-            data['BOT_2']['NAME'] = bot_2.name()
-            data['BOT_2']['POINTS'] = bot_2.points()
-            data['ROUNDS'] = self.passedRounds
-            data['DATE'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-            game_list['GAMES'].append(data)
+            data[GamesListFileField.GAME_ID.value] = self.threadID
+            data[GamesListFileField.BOT_1.value][GamesListFileField.BOT_NAME.value] = bot_1.name()
+            data[GamesListFileField.BOT_1.value][GamesListFileField.BOT_POINTS.value] = bot_1.points()
+            data[GamesListFileField.BOT_2.value][GamesListFileField.BOT_NAME.value] = bot_2.name()
+            data[GamesListFileField.BOT_2.value][GamesListFileField.BOT_POINTS.value] = bot_2.points()
+            data[GamesListFileField.ROUNDS.value] = self.passedRounds
+            data[GamesListFileField.DATE.value] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+            game_list.append(data)
             file.writelines(json.dumps(game_list, sort_keys=True, indent=4) + '\n')
 
     def runRound(self):

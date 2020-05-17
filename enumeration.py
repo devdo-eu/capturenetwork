@@ -39,3 +39,24 @@ class RoundAdvantage(IntEnum):
     TIME = 0
     BOT_1 = 1
     BOT_2 = 2
+
+
+@unique
+class GamesListFileField(Enum):
+    GAME_ID = 'game_id'
+    BOT_1 = 'bot_1'
+    BOT_2 = 'bot_2'
+    BOT_NAME = 'name'
+    BOT_POINTS = 'points'
+    ROUNDS = 'rounds'
+    DATE = 'date'
+    GAMES = 'games'
+
+
+@unique
+class RulesFileField(Enum):
+    RULES = 'rules'
+    ROUNDS = 'rounds'
+    ROUND_TIME_MS = 'round_time_ms'
+
+
