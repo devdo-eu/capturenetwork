@@ -1,8 +1,9 @@
+import argparse
 import logging
 import socket
-import argparse
-from mind import Mind
 from time import sleep, time
+
+from mind import Mind
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 
@@ -109,10 +110,10 @@ class PlayBot:
             elif data.startswith('Command: '):  # Phase 2
                 self.move_ack(data)
 
-            elif data.startswith('{"TIME": '):  # Phase 3
+            elif data.startswith('{"time": '):  # Phase 3
                 self.mind.round_ends(data)
 
-            elif data.startswith('{"WINNER":'):  # After Skirmish
+            elif data.startswith('{"winner":'):  # After Skirmish
                 self.mind.game_ends(data)
                 self.game = False
 

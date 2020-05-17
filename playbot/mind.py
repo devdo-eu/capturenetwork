@@ -1,8 +1,8 @@
 """@package mind
 Package contains Mind class used as a logic module for PlayBot class
 """
-from random import randrange
 from json import JSONDecodeError, loads
+from random import randrange
 
 
 class Mind:
@@ -10,6 +10,7 @@ class Mind:
     Class contains all the methods responsible for the logic
     that guides the bot's actions during the course of the game
     """
+
     def __init__(self, log_method):
         """
         Constructor of bot mind. Here you can initialize all variables
@@ -64,7 +65,7 @@ class Mind:
         try:
             self.__move_ok = False
             data = loads(data)
-            self.__log(data['BOT_1'])
+            self.__log(data['bot_1'])
         except JSONDecodeError as e:
             self.__log(f'Exception: {e.msg} while parsing data.')
 
