@@ -1,14 +1,15 @@
-
-from collections import defaultdict
-from collections import deque
+import copy
+import json
 import logging
 import threading
 import time
+from collections import defaultdict
+from collections import deque
+
 import bot
 import rules
-import json
-import copy
 from battleground import Battleground
+from enumeration import RulesFileField
 from namesaker import Namesaker
 
 
@@ -35,9 +36,7 @@ class Dispatcher(threading.Thread):
                     data += line
                 if data != '':
                     data = json.loads(data)
-                    for last_game in data['GAMES']:
-                        pass
-                    self.games = last_game['GAME_ID'] + 1
+                    self.games = len(data)
                     logging.info(self.name + f': game_list.json loaded.'
                                              f' GAME_ID set to {self.games}')
                 else:
@@ -55,8 +54,8 @@ class Dispatcher(threading.Thread):
     def saveRules(self):
         with open('./history/rules.json', 'w') as file:
             data = tree()
-            data['RULES']['ROUND_TIME_MS'] = rules.timeOfRound
-            data['RULES']['ROUNDS'] = rules.numberOfRounds
+            data[RulesFileField.RULES.value][RulesFileField.ROUND_TIME_MS.value] = rules.timeOfRound
+            data[RulesFileField.RULES.value][RulesFileField.ROUNDS.value] = rules.numberOfRounds
             file.writelines(json.dumps(data, sort_keys=True, indent=4))
         logging.info(self.name + ': Rules saved.')
 
