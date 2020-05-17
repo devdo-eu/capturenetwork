@@ -1,14 +1,14 @@
-
-from collections import defaultdict
+import copy
+import json
 import logging
 import threading
 import time
-import rules
-import json
-import copy
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from enumeration import RoundWinner, RoundAdvantage, GamesListFileField
+
+import rules
+from enumeration import RoundWinner, RoundAdvantage, GamesListFileField, BotMessageField
 
 
 def tree(): return defaultdict(tree)
@@ -45,12 +45,8 @@ class Battleground(threading.Thread):
     def saveData(self, bot_1, bot_2):
         self.fileLogName = f'{self.threadID}.json'
         Path("./history/games/").mkdir(parents=True, exist_ok=True)
-        game_json = tree()
-        game_json[GamesListFileField.ROUNDS.value] = []
-        for round in self.gameRecord:
-            game_json[GamesListFileField.ROUNDS.value].append(round)
         with open(f'./history/games/{self.fileLogName}', 'w') as file:
-            file.writelines(json.dumps(game_json, sort_keys=True, indent=4))
+            file.writelines(json.dumps(self.gameRecord, sort_keys=True, indent=4))
 
         try:
             with open('./history/game_list.json', 'r') as file:
@@ -145,18 +141,22 @@ class Battleground(threading.Thread):
     def prepareBotMessages(self, summary):
         msg_1 = copy.copy(summary)
         msg_2 = copy.copy(summary)
-        msg_1['BOT_1'], msg_1['BOT_2'] = self.bots[0].toJSON(self.timestamp), self.bots[1].toJSON(self.timestamp)
-        msg_2['BOT_1'], msg_2['BOT_2'] = self.bots[1].toJSON(self.timestamp), self.bots[0].toJSON(self.timestamp)
 
-        if msg_2['ADVANTAGE'] == RoundAdvantage.BOT_2:
-            msg_2['ADVANTAGE'] = 1
-        elif msg_2['ADVANTAGE'] == RoundAdvantage.BOT_1:
-            msg_2['ADVANTAGE'] = 2
+        msg_1[BotMessageField.BOT_1.value] = self.bots[0].toJSON(self.timestamp)
+        msg_1[BotMessageField.BOT_2.value] = self.bots[1].toJSON(self.timestamp)
 
-        if msg_2['WINNER'] == RoundWinner.BOT_2:
-            msg_2['WINNER'] = 1
-        elif msg_2['WINNER'] == RoundWinner.BOT_1:
-            msg_2['WINNER'] = 2
+        msg_2[BotMessageField.BOT_1.value] = self.bots[1].toJSON(self.timestamp)
+        msg_2[BotMessageField.BOT_2.value] = self.bots[0].toJSON(self.timestamp)
+
+        if msg_2[BotMessageField.ADVANTAGE.value] == RoundAdvantage.BOT_2:
+            msg_2[BotMessageField.ADVANTAGE.value] = 1
+        elif msg_2[BotMessageField.ADVANTAGE.value] == RoundAdvantage.BOT_1:
+            msg_2[BotMessageField.ADVANTAGE.value] = 2
+
+        if msg_2[BotMessageField.WINNER.value] == RoundWinner.BOT_2:
+            msg_2[BotMessageField.WINNER.value] = 1
+        elif msg_2[BotMessageField.WINNER.value] == RoundWinner.BOT_1:
+            msg_2[BotMessageField.WINNER.value] = 2
         return msg_1, msg_2
 
     def concludeTurn(self):
@@ -164,9 +164,10 @@ class Battleground(threading.Thread):
             return
 
         summary = tree()
-        summary['TIME'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-        summary['WINNER'], summary['ADVANTAGE'] = self.determineWinner(), self.deremineAdvantage()
-        summary['ROUND'] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
+        summary[BotMessageField.TIME.value] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        summary[BotMessageField.WINNER.value] = self.determineWinner()
+        summary[BotMessageField.ADVANTAGE.value] = self.deremineAdvantage()
+        summary[BotMessageField.ROUND.value] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
         msg_1, msg_2 = self.prepareBotMessages(summary)
 
         self.bots[0].sendMessage(json.dumps(msg_1))
@@ -186,13 +187,19 @@ class Battleground(threading.Thread):
 
         bots = self.bots
         results = tree()
-        shortcut = results['WINNER']
+        shortcut = results[BotMessageField.WINNER.value]
         if bots[0].points() > bots[1].points():
-            shortcut['ID'], shortcut['NAME'], shortcut['POINTS'] = RoundWinner.BOT_1, bots[0].name(), bots[0].points()
+            shortcut[BotMessageField.ID.value] = RoundWinner.BOT_1
+            shortcut[BotMessageField.NAME.value] = bots[0].name()
+            shortcut[BotMessageField.POINTS.value] = bots[0].points()
         elif bots[0].points() < bots[1].points():
-            shortcut['ID'], shortcut['NAME'], shortcut['POINTS'] = RoundWinner.BOT_2, bots[1].name(), bots[1].points()
+            shortcut[BotMessageField.ID.value] = RoundWinner.BOT_2
+            shortcut[BotMessageField.NAME.value] = bots[1].name()
+            shortcut[BotMessageField.POINTS.value] = bots[1].points()
         else:
-            shortcut['ID'], shortcut['NAME'], shortcut['POINTS'] = RoundWinner.DRAW, '-', 0
+            shortcut[BotMessageField.ID.value] = RoundWinner.DRAW
+            shortcut['NAME'] = '-'
+            shortcut['POINTS'] = 0
 
         bots[0].sendMessage(json.dumps(results))
         bots[1].sendMessage(json.dumps(results))

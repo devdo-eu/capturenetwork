@@ -1,7 +1,8 @@
 import time
-from enumeration import Method
 from collections import defaultdict
+
 import rules
+from enumeration import Method, BotField
 
 
 class Bot:
@@ -15,14 +16,15 @@ class Bot:
         self.__method = Method.NOP
         self.sendMessage('Name?')
 
-    def __tree(self): return defaultdict(self.__tree)
+    def __tree(self):
+        return defaultdict(self.__tree)
 
     def toJSON(self, timestamp):
         ret = self.__tree()
-        ret['NAME'] = self.name()
-        ret['USED'] = rules.methodToName[self.method()]
-        ret['TIME'] = round(self.timestamp() - timestamp, 4)
-        ret['POINTS'] = self.points()
+        ret[BotField.NAME.value] = self.name()
+        ret[BotField.USED.value] = rules.methodToName[self.method()]
+        ret[BotField.TIME.value] = round(self.timestamp() - timestamp, 4)
+        ret[BotField.POINTS.value] = self.points()
         return ret
 
     def sendMessage(self, message):

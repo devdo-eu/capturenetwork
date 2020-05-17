@@ -50,7 +50,27 @@ class GamesListFileField(Enum):
     BOT_POINTS = 'points'
     ROUNDS = 'rounds'
     DATE = 'date'
-    GAMES = 'games'
+
+
+@unique
+class BotMessageField(Enum):
+    TIME = 'time'
+    WINNER = 'winner'
+    ADVANTAGE = 'advantage'
+    ROUND = 'round'
+    BOT_1 = 'bot_1'
+    BOT_2 = 'bot_2'
+    ID = 'id'
+    NAME = 'name'
+    POINTS = 'points'
+
+
+@unique
+class BotField(Enum):
+    NAME = 'name'
+    USED = 'used'
+    TIME = 'time'
+    POINTS = 'points'
 
 
 @unique
@@ -58,5 +78,3 @@ class RulesFileField(Enum):
     RULES = 'rules'
     ROUNDS = 'rounds'
     ROUND_TIME_MS = 'round_time_ms'
-
-
