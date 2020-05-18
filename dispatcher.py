@@ -9,7 +9,8 @@ from collections import deque
 import bot
 import rules
 from battleground import Battleground
-from enumeration import RulesFileField
+from enumeration import GamesListFileField as gff
+from enumeration import RulesFileField as rff
 from namesaker import Namesaker
 
 
@@ -36,7 +37,11 @@ class Dispatcher(threading.Thread):
                     data += line
                 if data != '':
                     data = json.loads(data)
-                    self.games = len(data)
+                    max_game_id = 0
+                    for game in data:
+                        current_game_id = game[gff.GAME_ID.value]
+                        max_game_id = current_game_id if current_game_id > max_game_id else max_game_id
+                    self.games = max_game_id + 1
                     logging.info(self.name + f': game_list.json loaded.'
                                              f' GAME_ID set to {self.games}')
                 else:
@@ -54,8 +59,8 @@ class Dispatcher(threading.Thread):
     def saveRules(self):
         with open('./history/rules.json', 'w') as file:
             data = tree()
-            data[RulesFileField.RULES.value][RulesFileField.ROUND_TIME_MS.value] = rules.timeOfRound
-            data[RulesFileField.RULES.value][RulesFileField.ROUNDS.value] = rules.numberOfRounds
+            data[rff.RULES.value][rff.ROUND_TIME_MS.value] = rules.timeOfRound
+            data[rff.RULES.value][rff.ROUNDS.value] = rules.numberOfRounds
             file.writelines(json.dumps(data, sort_keys=True, indent=4))
         logging.info(self.name + ': Rules saved.')
 
