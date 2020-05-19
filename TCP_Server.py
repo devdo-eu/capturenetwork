@@ -111,11 +111,8 @@ class SelectorServer:
             if data:
                 peername = conn.getpeername()
                 self.__peerData[peername] = data
-        except ConnectionResetError as e:
-            logging.info(f'ConnectionResetErrorException: {e.strerror}')
-            self.close_connection(conn)
-        except OSError as e:
-            logging.info(f'OSError Exception: {e.strerror}')
+        except (ConnectionResetError, OSError) as e:
+            logging.info(f'Exception: {e.strerror}')
             self.close_connection(conn)
 
     def get_data(self):
