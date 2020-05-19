@@ -67,13 +67,7 @@ class Dispatcher(threading.Thread):
                 try:
                     bot_.sendMessage('GO')
                     bot_.sendMessage('GO')
-                except ConnectionResetError:
-                    self.bots.remove(bot_)
-                    self.bot_id -= 1
-                except ConnectionAbortedError:
-                    self.bots.remove(bot_)
-                    self.bot_id -= 1
-                except OSError:
+                except (ConnectionResetError, ConnectionAbortedError, OSError):
                     self.bots.remove(bot_)
                     self.bot_id -= 1
         else:
