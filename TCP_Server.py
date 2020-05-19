@@ -97,8 +97,11 @@ class SelectorServer:
             return
         peername = self.current_peers[conn.get().fileno()]
         logging.info('closing connection to {0}'.format(peername))
-        del self.current_peers[conn.get().fileno()]
-        self.selector.unregister(conn.get())
+        try:
+            del self.current_peers[conn.get().fileno()]
+            self.selector.unregister(conn.get())
+        except KeyError:
+            logging.info('no peer...')
         conn.get().close()
         self.current_number_of_peers -= 1
         logging.info('Num active peers = {0}'.format(
