@@ -201,8 +201,8 @@ class Battleground(threading.Thread):
             shortcut[bmf.POINTS.value] = bots[1].points()
         else:
             shortcut[bmf.ID.value] = rw.DRAW
-            shortcut['NAME'] = '-'
-            shortcut['POINTS'] = 0
+            shortcut[bmf.NAME.value] = '-'
+            shortcut[bmf.POINTS.value] = 0
 
         bots[0].sendMessage(json.dumps(results))
         bots[1].sendMessage(json.dumps(results))
