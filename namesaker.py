@@ -14,7 +14,7 @@ class Namesaker(threading.Thread):
         named = False
         deadline = time.time() + 5
         while not named and time.time() < deadline:
-            data = self.server.get_data()
+            data = self.server.getData()
             cData = copy.copy(data)
             for peer_address, name in cData.items():
                 try:

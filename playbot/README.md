@@ -16,7 +16,7 @@ You will find this method inside `playbot.py` file
 ```python
 def play(self):
     while self.game:
-        data = self.get_data()
+        data = self.getData()
         if data == '':
             sleep(0.001)
 

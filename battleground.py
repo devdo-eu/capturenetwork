@@ -88,7 +88,7 @@ class Battleground(threading.Thread):
         time.sleep(0.001)
         deadline = time.time() + rules.timeOfRound / 1000
         while time.time() < deadline:
-            data = self.server.get_data()
+            data = self.server.getData()
             cData = copy.copy(data)
             timestamp = time.time()
             for bot_address, method in cData.items():
@@ -180,7 +180,7 @@ class Battleground(threading.Thread):
 
     def cleanAfterGame(self):
         for bot in self.bots:
-            self.server.close_connection(bot.connection())
+            self.server.closeConnection(bot.connection())
         self.gameRecord = []
         self.bots.clear()
 
