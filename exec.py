@@ -4,7 +4,7 @@ Created on Thu Nov 21 19:32:07 2019
 
 @author: Grzesiek-UC
 """
-from TCP_Server import SelectorServer
+from server import SelectorServer
 import logging
 import argparse
 from dispatcher import Dispatcher
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     thread1 = Dispatcher(1, "Dispatcher", server)
     thread1.start()
     try:
-        server.serve_forever()
+        server.serveForever()
         logging.info('line after server start')
     except KeyboardInterrupt:
         pass
