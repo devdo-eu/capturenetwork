@@ -21,35 +21,46 @@ trigger = False
 
 
 class Sender(threading.Thread):
+    """
+    Class used to async send data to bot.
+    It is created to give equal chance to both bots.
+    """
     def __init__(self, bot):
         threading.Thread.__init__(self)
-        self.bot = bot
-        self.deadline = time.time() + 3
+        self.__bot = bot
+        self.__deadline = time.time() + 3
 
     def run(self):
         global trigger
-        while not trigger and time.time() < self.deadline:
+        while not trigger and time.time() < self.__deadline:
             time.sleep(0.0001)
-        self.bot.sendMessage('Command>')
+        self.__bot.sendMessage('Command>')
 
 
 class Battleground(threading.Thread):
+    """
+    Class responsible for handle bot battle.
+    Object of this call do all operations required to come up with a winner.
+    """
     def __init__(self, threadID, name, server, bot_1, bot_2):
         threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.name = name
-        self.server = server
-        self.bots = [bot_1, bot_2]
-        self.timestamp = time.time()
-        self.passedRounds = 0
-        self.fileLogName = ''
-        self.gameRecord = []
+        self.__threadID = threadID
+        self.__name = name
+        self.__server = server
+        self.__bots = [bot_1, bot_2]
+        self.__timestamp = time.time()
+        self.__passedRounds = 0
+        self.__fileLogName = ''
+        self.__gameRecord = []
 
-    def saveData(self, bot_1, bot_2):
-        self.fileLogName = f'{self.threadID}.json'
+    def saveData(self):
+        """
+        Method responsible for save battle data to file on disk.
+        """
+        self.__fileLogName = f'{self.__threadID}.json'
         Path("./history/games/").mkdir(parents=True, exist_ok=True)
-        with open(f'./history/games/{self.fileLogName}', 'w') as file:
-            file.writelines(json.dumps(self.gameRecord, sort_keys=True, indent=4))
+        with open(f'./history/games/{self.__fileLogName}', 'w') as file:
+            file.writelines(json.dumps(self.__gameRecord, sort_keys=True, indent=4))
 
         try:
             with open('./history/game_list.json', 'r') as file:
@@ -66,21 +77,25 @@ class Battleground(threading.Thread):
 
         with open('./history/game_list.json', 'w') as file:
             data = tree()
-            data[gff.GAME_ID.value] = self.threadID
-            data[gff.BOT_1.value][gff.BOT_NAME.value] = bot_1.name()
-            data[gff.BOT_1.value][gff.BOT_POINTS.value] = bot_1.points()
-            data[gff.BOT_2.value][gff.BOT_NAME.value] = bot_2.name()
-            data[gff.BOT_2.value][gff.BOT_POINTS.value] = bot_2.points()
-            data[gff.ROUNDS.value] = self.passedRounds
+            data[gff.GAME_ID.value] = self.__threadID
+            data[gff.BOT_1.value][gff.BOT_NAME.value] = self.__bots[0].name()
+            data[gff.BOT_1.value][gff.BOT_POINTS.value] = self.__bots[0].points()
+            data[gff.BOT_2.value][gff.BOT_NAME.value] = self.__bots[1].name()
+            data[gff.BOT_2.value][gff.BOT_POINTS.value] = self.__bots[1].points()
+            data[gff.ROUNDS.value] = self.__passedRounds
             data[gff.DATE.value] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             game_list.append(data)
             file.writelines(json.dumps(game_list, sort_keys=True, indent=4) + '\n')
 
     def runRound(self):
+        """
+        Method responsible for round control and calculation of round result.
+        Here request for move is send to both bots.
+        """
         global trigger
         threads = []
-        self.timestamp = time.time()
-        for bot in self.bots:
+        self.__timestamp = time.time()
+        for bot in self.__bots:
             bot.putMethod('NOP()', time.time(), False)
             threads.append(Sender(bot))
             threads[len(threads) - 1].start()
@@ -88,21 +103,25 @@ class Battleground(threading.Thread):
         time.sleep(0.001)
         deadline = time.time() + rules.timeOfRound / 1000
         while time.time() < deadline:
-            data = self.server.getData()
+            data = self.__server.getData()
             cData = copy.copy(data)
             timestamp = time.time()
             for bot_address, method in cData.items():
-                for bot in self.bots:
+                for bot in self.__bots:
                     if bot.connection().getpeername() == bot_address:
                         bot.putMethod(method, timestamp)
                         del data[bot_address]
                         break
             time.sleep(0.001)
         trigger = False
-        self.passedRounds += 1
+        self.__passedRounds += 1
 
     def determineWinner(self):
-        bot_1, bot_2 = self.bots[0], self.bots[1]
+        """
+        Helper method used to calculate round winner
+        :return: RoundWinner enum
+        """
+        bot_1, bot_2 = self.__bots[0], self.__bots[1]
         result_1 = rules.methodToMethodResult[bot_1.method()][bot_2.method()]
         winner = rw.DRAW
 
@@ -126,7 +145,11 @@ class Battleground(threading.Thread):
         return winner
 
     def deremineAdvantage(self):
-        bot_1, bot_2 = self.bots[0], self.bots[1]
+        """
+        Helper method used to determinate which bot will have advantage next round
+        :return: RoundAdvantage enum
+        """
+        bot_1, bot_2 = self.__bots[0], self.__bots[1]
         advantage_1 = rules.methodToMethodAdvantage[bot_1.method()][bot_2.method()]
         bot_1.putAdvantage(False)
         bot_2.putAdvantage(False)
@@ -142,14 +165,19 @@ class Battleground(threading.Thread):
         return adv
 
     def prepareBotMessages(self, summary):
+        """
+        Helper method used to prepare messages with data about round
+        :param summary: Json object with round summary
+        :return: Two json object which are messages for bots
+        """
         msg_1 = copy.copy(summary)
         msg_2 = copy.copy(summary)
 
-        msg_1[bmf.BOT_1.value] = self.bots[0].toJSON(self.timestamp)
-        msg_1[bmf.BOT_2.value] = self.bots[1].toJSON(self.timestamp)
+        msg_1[bmf.BOT_1.value] = self.__bots[0].toJSON(self.__timestamp)
+        msg_1[bmf.BOT_2.value] = self.__bots[1].toJSON(self.__timestamp)
 
-        msg_2[bmf.BOT_1.value] = self.bots[1].toJSON(self.timestamp)
-        msg_2[bmf.BOT_2.value] = self.bots[0].toJSON(self.timestamp)
+        msg_2[bmf.BOT_1.value] = self.__bots[1].toJSON(self.__timestamp)
+        msg_2[bmf.BOT_2.value] = self.__bots[0].toJSON(self.__timestamp)
 
         if msg_2[bmf.ADVANTAGE.value] == ra.BOT_2:
             msg_2[bmf.ADVANTAGE.value] = 1
@@ -163,32 +191,43 @@ class Battleground(threading.Thread):
         return msg_1, msg_2
 
     def concludeTurn(self):
-        if len(self.bots) != 2:
+        """
+        Method responsible for preparation and sending messages with data about passed round
+        """
+        if len(self.__bots) != 2:
             return
 
         summary = tree()
         summary[bmf.TIME.value] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         summary[bmf.WINNER.value] = self.determineWinner()
         summary[bmf.ADVANTAGE.value] = self.deremineAdvantage()
-        summary[bmf.ROUND.value] = str(self.passedRounds) + '/' + str(rules.numberOfRounds)
+        summary[bmf.ROUND.value] = str(self.__passedRounds) + '/' + str(rules.numberOfRounds)
         msg_1, msg_2 = self.prepareBotMessages(summary)
 
-        self.bots[0].sendMessage(json.dumps(msg_1))
-        self.bots[1].sendMessage(json.dumps(msg_2))
-        self.gameRecord.append(msg_1)
+        self.__bots[0].sendMessage(json.dumps(msg_1))
+        self.__bots[1].sendMessage(json.dumps(msg_2))
+        self.__gameRecord.append(msg_1)
         logging.info(json.dumps(summary))
 
     def cleanAfterGame(self):
-        for bot in self.bots:
-            self.server.closeConnection(bot.connection())
-        self.gameRecord = []
-        self.bots.clear()
+        """
+        Method used to clean up after bot battle ends
+        :return:
+        """
+        for bot in self.__bots:
+            self.__server.closeConnection(bot.connection())
+        self.__gameRecord = []
+        self.__bots.clear()
 
     def concludeGame(self):
-        if len(self.bots) != 2:
+        """
+        Method responsible for preparation and sending messages with summary after battle.
+        It also save data about game and clean up remains
+        """
+        if len(self.__bots) != 2:
             return
 
-        bots = self.bots
+        bots = self.__bots
         results = tree()
         shortcut = results[bmf.WINNER.value]
         if bots[0].points() > bots[1].points():
@@ -208,13 +247,16 @@ class Battleground(threading.Thread):
         bots[1].sendMessage(json.dumps(results))
         logging.info(json.dumps(results))
 
-        self.saveData(bots[0], bots[1])
+        self.saveData()
         self.cleanAfterGame()
 
     def run(self):
-        logging.info("Starting Battle: " + self.name)
-        self.passedRounds = 0
-        while self.server.closed is False and self.passedRounds < rules.numberOfRounds:
+        """
+        Main method of class. Responsible for logic flow of battles.
+        """
+        logging.info("Starting Battle: " + self.__name)
+        self.__passedRounds = 0
+        while self.__server.closed is False and self.__passedRounds < rules.numberOfRounds:
             try:
                 self.runRound()
                 self.concludeTurn()
@@ -223,4 +265,4 @@ class Battleground(threading.Thread):
                 break
 
         self.concludeGame()
-        logging.info("Exiting " + self.name)
+        logging.info("Exiting " + self.__name)
