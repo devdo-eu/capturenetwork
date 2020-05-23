@@ -34,6 +34,7 @@ class Sender(threading.Thread):
         global trigger
         while not trigger and time.time() < self.__deadline:
             time.sleep(0.0001)
+
         self.__bot.sendMessage('Command>')
 
 
@@ -42,9 +43,9 @@ class Battleground(threading.Thread):
     Class responsible for handle bot battle.
     Object of this call do all operations required to come up with a winner.
     """
-    def __init__(self, threadID, name, server, bot_1, bot_2):
+    def __init__(self, thread_id, name, server, bot_1, bot_2):
         threading.Thread.__init__(self)
-        self.__threadID = threadID
+        self.__thread_id = thread_id
         self.__name = name
         self.__server = server
         self.__bots = [bot_1, bot_2]
@@ -57,7 +58,7 @@ class Battleground(threading.Thread):
         """
         Method responsible for save battle data to file on disk.
         """
-        self.__fileLogName = f'{self.__threadID}.json'
+        self.__fileLogName = f'{self.__thread_id}.json'
         Path("./history/games/").mkdir(parents=True, exist_ok=True)
         with open(f'./history/games/{self.__fileLogName}', 'w') as file:
             file.writelines(json.dumps(self.__gameRecord, sort_keys=True, indent=4))
@@ -68,16 +69,18 @@ class Battleground(threading.Thread):
                 for line in file:
                     game_list += line
                 game_list = json.loads(game_list)
+
         except (FileNotFoundError, json.JSONDecodeError) as error:
             if isinstance(error, FileNotFoundError):
                 logging.info('No game_list.json file. Creating file.')
             else:
                 logging.info('Bad format inside game_list.json file.')
+
             game_list = []
 
         with open('./history/game_list.json', 'w') as file:
             data = tree()
-            data[gff.GAME_ID.value] = self.__threadID
+            data[gff.GAME_ID.value] = self.__thread_id
             data[gff.BOT_1.value][gff.BOT_NAME.value] = self.__bots[0].name()
             data[gff.BOT_1.value][gff.BOT_POINTS.value] = self.__bots[0].points()
             data[gff.BOT_2.value][gff.BOT_NAME.value] = self.__bots[1].name()
@@ -99,19 +102,21 @@ class Battleground(threading.Thread):
             bot.putMethod('NOP()', time.time(), False)
             threads.append(Sender(bot))
             threads[len(threads) - 1].start()
+
         trigger = True
         time.sleep(0.001)
         deadline = time.time() + rules.timeOfRound / 1000
         while time.time() < deadline:
             data = self.__server.getData()
-            cData = copy.copy(data)
+            data_copy = copy.copy(data)
             timestamp = time.time()
-            for bot_address, method in cData.items():
+            for bot_address, method in data_copy.items():
                 for bot in self.__bots:
                     if bot.connection().getpeername() == bot_address:
                         bot.putMethod(method, timestamp)
                         del data[bot_address]
                         break
+
             time.sleep(0.001)
         trigger = False
         self.__passedRounds += 1
@@ -128,20 +133,25 @@ class Battleground(threading.Thread):
         if result_1 is rules.Result.FASTER_WINNER:
             if bot_1.advantage():
                 result_1 = rules.Result.WIN
+
             elif bot_2.advantage():
                 result_1 = rules.Result.LOSE
+
             else:
                 if bot_1.timestamp() < bot_2.timestamp():
                     result_1 = rules.Result.WIN
+
                 else:
                     result_1 = rules.Result.LOSE
 
         if result_1 is rules.Result.WIN:
             bot_1.addPrize()
             winner = rw.BOT_1
+
         elif result_1 is rules.Result.LOSE:
             bot_2.addPrize()
             winner = rw.BOT_2
+
         return winner
 
     def deremineAdvantage(self):
@@ -154,14 +164,17 @@ class Battleground(threading.Thread):
         bot_1.putAdvantage(False)
         bot_2.putAdvantage(False)
         adv = ra.TIME
+
         if advantage_1 is rules.Advantage.GAIN:
             bot_1.putAdvantage(True)
             bot_2.putAdvantage(False)
             adv = ra.BOT_1
+
         elif advantage_1 is rules.Advantage.LOST:
             bot_1.putAdvantage(False)
             bot_2.putAdvantage(True)
             adv = ra.BOT_2
+
         return adv
 
     def prepareBotMessages(self, summary):
@@ -181,13 +194,16 @@ class Battleground(threading.Thread):
 
         if msg_2[bmf.ADVANTAGE.value] == ra.BOT_2:
             msg_2[bmf.ADVANTAGE.value] = 1
+
         elif msg_2[bmf.ADVANTAGE.value] == ra.BOT_1:
             msg_2[bmf.ADVANTAGE.value] = 2
 
         if msg_2[bmf.WINNER.value] == rw.BOT_2:
             msg_2[bmf.WINNER.value] = 1
+
         elif msg_2[bmf.WINNER.value] == rw.BOT_1:
             msg_2[bmf.WINNER.value] = 2
+
         return msg_1, msg_2
 
     def concludeTurn(self):
@@ -216,6 +232,7 @@ class Battleground(threading.Thread):
         """
         for bot in self.__bots:
             self.__server.closeConnection(bot.connection())
+
         self.__gameRecord = []
         self.__bots.clear()
 
@@ -230,14 +247,17 @@ class Battleground(threading.Thread):
         bots = self.__bots
         results = tree()
         shortcut = results[bmf.WINNER.value]
+
         if bots[0].points() > bots[1].points():
             shortcut[bmf.ID.value] = rw.BOT_1
             shortcut[bmf.NAME.value] = bots[0].name()
             shortcut[bmf.POINTS.value] = bots[0].points()
+
         elif bots[0].points() < bots[1].points():
             shortcut[bmf.ID.value] = rw.BOT_2
             shortcut[bmf.NAME.value] = bots[1].name()
             shortcut[bmf.POINTS.value] = bots[1].points()
+
         else:
             shortcut[bmf.ID.value] = rw.DRAW
             shortcut[bmf.NAME.value] = '-'
