@@ -26,12 +26,12 @@ if __name__ == '__main__':
     logging.info('Battle.Server: Starting...')
     greetings = '-----<<<Battle.Server>>>-----\r\n---<<<CaptureTheNetwork>>>---\r\n'
     server = SelectorServer(greetings, host=args.host, port=args.port)
-    thread1 = Dispatcher(1, "Dispatcher", server)
-    thread1.start()
+    thread = Dispatcher(1, "Dispatcher", server)
+    thread.start()
     try:
         server.serveForever()
         logging.info('line after server start')
     except KeyboardInterrupt:
         pass
     server.close()
-    thread1.join()
+    thread.join()

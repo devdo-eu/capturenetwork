@@ -4,22 +4,25 @@ import copy
 import time
 
 
-class Namesaker(threading.Thread):
+class NameSaker(threading.Thread):
+    """
+    Class responsible for finding out the bot's name.
+    """
     def __init__(self, bot, server):
         threading.Thread.__init__(self)
-        self.server = server
-        self.bot = bot
+        self.__server = server
+        self.__bot = bot
 
     def run(self):
         named = False
         deadline = time.time() + 5
         while not named and time.time() < deadline:
-            data = self.server.getData()
-            cData = copy.copy(data)
-            for peer_address, name in cData.items():
+            data = self.__server.getData()
+            data_copy = copy.copy(data)
+            for peer_address, name in data_copy.items():
                 try:
-                    if self.bot.connection().getpeername() == peer_address:
-                        self.bot.putName(name)
+                    if self.__bot.connection().getpeername() == peer_address:
+                        self.__bot.putName(name)
                         logging.info(f'Namesaker: Bot introduced himself as {name}')
                         del data[peer_address]
                         named = True

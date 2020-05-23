@@ -11,7 +11,7 @@ import rules
 from battleground import Battleground
 from enumeration import GamesListFileField as gff
 from enumeration import RulesFileField as rff
-from namesaker import Namesaker
+from namesaker import NameSaker
 
 
 def tree(): return defaultdict(tree)
@@ -128,7 +128,7 @@ class Dispatcher(threading.Thread):
                         self.__bots.append(new_bot)
                         self.__bot_id += 1
                         logging.info("Dispatcher: Bot Connected...")
-                        name_seeker = Namesaker(new_bot, self.__server)
+                        name_seeker = NameSaker(new_bot, self.__server)
                         name_seeker.start()
                         self.__threads.append(name_seeker)
                         break
