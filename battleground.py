@@ -20,24 +20,6 @@ def tree(): return defaultdict(tree)
 trigger = False
 
 
-class Sender(threading.Thread):
-    """
-    Class used to async send data to bot.
-    It is created to give equal chance to both bots.
-    """
-    def __init__(self, bot):
-        threading.Thread.__init__(self)
-        self.__bot = bot
-        self.__deadline = time.time() + 3
-
-    def run(self):
-        global trigger
-        while not trigger and time.time() < self.__deadline:
-            time.sleep(0.0001)
-
-        self.__bot.sendMessage('Command>')
-
-
 class Battleground(threading.Thread):
     """
     Class responsible for handle bot battle.
@@ -54,7 +36,7 @@ class Battleground(threading.Thread):
         self.__fileLogName = ''
         self.__gameRecord = []
 
-    def saveData(self):
+    def __saveData(self):
         """
         Method responsible for save battle data to file on disk.
         """
@@ -90,7 +72,7 @@ class Battleground(threading.Thread):
             game_list.append(data)
             file.writelines(json.dumps(game_list, sort_keys=True, indent=4) + '\n')
 
-    def runRound(self):
+    def __runRound(self):
         """
         Method responsible for round control and calculation of round result.
         Here request for move is send to both bots.
@@ -121,7 +103,7 @@ class Battleground(threading.Thread):
         trigger = False
         self.__passedRounds += 1
 
-    def determineWinner(self):
+    def __determineWinner(self):
         """
         Helper method used to calculate round winner
         :return: RoundWinner enum
@@ -154,7 +136,7 @@ class Battleground(threading.Thread):
 
         return winner
 
-    def deremineAdvantage(self):
+    def __deremineAdvantage(self):
         """
         Helper method used to determinate which bot will have advantage next round
         :return: RoundAdvantage enum
@@ -177,7 +159,7 @@ class Battleground(threading.Thread):
 
         return adv
 
-    def prepareBotMessages(self, summary):
+    def __prepareBotMessages(self, summary):
         """
         Helper method used to prepare messages with data about round
         :param summary: Json object with round summary
@@ -206,7 +188,7 @@ class Battleground(threading.Thread):
 
         return msg_1, msg_2
 
-    def concludeTurn(self):
+    def __concludeTurn(self):
         """
         Method responsible for preparation and sending messages with data about passed round
         """
@@ -215,17 +197,17 @@ class Battleground(threading.Thread):
 
         summary = tree()
         summary[bmf.TIME.value] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-        summary[bmf.WINNER.value] = self.determineWinner()
-        summary[bmf.ADVANTAGE.value] = self.deremineAdvantage()
+        summary[bmf.WINNER.value] = self.__determineWinner()
+        summary[bmf.ADVANTAGE.value] = self.__deremineAdvantage()
         summary[bmf.ROUND.value] = str(self.__passedRounds) + '/' + str(rules.numberOfRounds)
-        msg_1, msg_2 = self.prepareBotMessages(summary)
+        msg_1, msg_2 = self.__prepareBotMessages(summary)
 
         self.__bots[0].sendMessage(json.dumps(msg_1))
         self.__bots[1].sendMessage(json.dumps(msg_2))
         self.__gameRecord.append(msg_1)
         logging.info(json.dumps(summary))
 
-    def cleanAfterGame(self):
+    def __cleanAfterGame(self):
         """
         Method used to clean up after bot battle ends
         :return:
@@ -236,7 +218,7 @@ class Battleground(threading.Thread):
         self.__gameRecord = []
         self.__bots.clear()
 
-    def concludeGame(self):
+    def __concludeGame(self):
         """
         Method responsible for preparation and sending messages with summary after battle.
         It also save data about game and clean up remains
@@ -267,8 +249,8 @@ class Battleground(threading.Thread):
         bots[1].sendMessage(json.dumps(results))
         logging.info(json.dumps(results))
 
-        self.saveData()
-        self.cleanAfterGame()
+        self.__saveData()
+        self.__cleanAfterGame()
 
     def run(self):
         """
@@ -278,11 +260,30 @@ class Battleground(threading.Thread):
         self.__passedRounds = 0
         while self.__server.closed is False and self.__passedRounds < rules.numberOfRounds:
             try:
-                self.runRound()
-                self.concludeTurn()
+                self.__runRound()
+                self.__concludeTurn()
             except OSError:
-                self.cleanAfterGame()
+                self.__cleanAfterGame()
                 break
 
-        self.concludeGame()
+        self.__concludeGame()
         logging.info("Exiting " + self.__name)
+
+
+class Sender(threading.Thread):
+    """
+    Class used to async send data to bot.
+    It is created to give equal chance to both bots.
+    """
+
+    def __init__(self, bot):
+        threading.Thread.__init__(self)
+        self.__bot = bot
+        self.__deadline = time.time() + 3
+
+    def run(self):
+        global trigger
+        while not trigger and time.time() < self.__deadline:
+            time.sleep(0.0001)
+
+        self.__bot.sendMessage('Command>')

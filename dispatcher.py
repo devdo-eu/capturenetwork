@@ -33,7 +33,7 @@ class Dispatcher(threading.Thread):
         self.__bots = deque()
         self.__threads = []
 
-    def getLastGameID(self):
+    def __getLastGameID(self):
         """
         Method responsible for loading game_list.json file and obtaining last game id
         """
@@ -59,7 +59,7 @@ class Dispatcher(threading.Thread):
         except FileNotFoundError:
             logging.info(self.__name + ': No game_list.json file, GAME_ID set to 0.')
 
-    def createBattle(self, id, server):
+    def __createBattle(self, id, server):
         """
         Method used to create Battleground object
         which will handle all bot battle operations
@@ -73,7 +73,7 @@ class Dispatcher(threading.Thread):
         thread.start()
         return thread
 
-    def saveRules(self):
+    def __saveRules(self):
         """
         Helper method used to save server rules to file rules.json
         """
@@ -85,7 +85,7 @@ class Dispatcher(threading.Thread):
 
         logging.info(self.__name + ': Rules saved.')
 
-    def sendGo(self, force=False):
+    def __sendGo(self, force=False):
         """
         Helper method used to check if bots are still connected
         when Dispatcher is creating Battleground object.
@@ -105,7 +105,7 @@ class Dispatcher(threading.Thread):
         else:
             self.__heartbeat += 1
 
-    def logBots(self):
+    def __logBots(self):
         """
         Method responsible for login bots.
         It is checking password for connected clients and ask bot for its name.
@@ -148,22 +148,22 @@ class Dispatcher(threading.Thread):
         Main method of Dispatcher class. Responsible for handling all of its logic
         """
         logging.info(self.__name + ': Loads GAME_ID...')
-        self.getLastGameID()
+        self.__getLastGameID()
         logging.info(self.__name + ': Writes rules.json...')
-        self.saveRules()
+        self.__saveRules()
         logging.info(self.__name + ': Ready.')
         while self.__server.closed is False:
             try:
-                self.logBots()
-                self.sendGo()
+                self.__logBots()
+                self.__sendGo()
 
                 if len(self.__bots) >= 2:
-                    self.sendGo(True)
+                    self.__sendGo(True)
                     time.sleep(1)
 
                 if len(self.__bots) >= 2:
                     logging.info('Game can be played.....')
-                    self.__threads.append(self.createBattle(self.__games, self.__server))
+                    self.__threads.append(self.__createBattle(self.__games, self.__server))
                     self.__games += 1
                     self.__bot_id = 0
 
