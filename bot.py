@@ -7,7 +7,7 @@ from enumeration import Method, BotField
 
 class Bot:
     """
-    Class is a abstraction of bot.
+    Class is used to represent a bot.
     It is responsible for handling all operation related with bot.
     """
     def __init__(self, conn, bot_id, name):
