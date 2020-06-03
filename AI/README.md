@@ -47,6 +47,6 @@ Inside this folder is bot powered by narrow AI.
  You should check yourself and try to beat it :)
  
  ### Closing word
- If you can beat this AI bot, I will be happy to hear this story
+ If you can beat this AI bot, I will be happy to hear the story.
  
  If you had some question - let me know and I will try to answer.
