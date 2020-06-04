@@ -13,7 +13,7 @@ class Mind:
     Class contains all the methods responsible for the logic
     that guides the bot's actions during the course of the game
     """
-    def __init__(self, log_method, agent):
+    def __init__(self, log_method):
         """
         Constructor of bot mind. Here you can initialize all variables
         which you need to store for proper logic.
@@ -22,14 +22,14 @@ class Mind:
         """
         self.__log = log_method
         self.__moves = ['NOP()', 'PATCH()', 'SCAN()', 'OVERLOAD()', 'OVERHEAR()', 'EXPLOIT()', 'INFECT()']
-        self.__my_name = f'AI {agent}'
+        self.__my_name = f'AI Network'
         self.__my_move = ''
         self.__move_ok = False
         self.model = []
         self.state = [0] * 108
         self.last_all_bot0 = deque()
         self.last_all_bot1 = deque()
-        self.load_agent(agent)
+        self.load_agent('network')
 
     def load_agent(self, agent):
         json_file = open(f'{agent}.json', 'r')
