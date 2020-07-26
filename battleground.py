@@ -12,6 +12,8 @@ from enumeration import BotMessageField as bmf
 from enumeration import GamesListFileField as gff
 from enumeration import RoundAdvantage as ra
 from enumeration import RoundWinner as rw
+from enumeration import BotField
+from statistician import Statistician
 
 
 def tree(): return defaultdict(tree)
@@ -34,16 +36,19 @@ class Battleground(threading.Thread):
         self.__timestamp = time.time()
         self.__passedRounds = 0
         self.__fileLogName = ''
+        self.__scribe = Statistician(bot_1.name(), bot_2.name(), thread_id)
         self.__gameRecord = []
 
     def __saveData(self):
         """
         Method responsible for save battle data to file on disk.
         """
-        self.__fileLogName = f'{self.__thread_id}.json'
-        Path("./history/games/").mkdir(parents=True, exist_ok=True)
-        with open(f'./history/games/{self.__fileLogName}', 'w') as file:
+        self.__fileLogName = 'game_record.json'
+        path = f"./history/games/{self.__thread_id}"
+        Path(path).mkdir(parents=True, exist_ok=True)
+        with open(f'{path}/{self.__fileLogName}', 'w') as file:
             file.writelines(json.dumps(self.__gameRecord, sort_keys=True, indent=4))
+        self.__scribe.dump_statistics()
 
         try:
             with open('./history/game_list.json', 'r') as file:
@@ -168,11 +173,17 @@ class Battleground(threading.Thread):
         msg_1 = copy.copy(summary)
         msg_2 = copy.copy(summary)
 
-        msg_1[bmf.BOT_1.value] = self.__bots[0].toJSON(self.__timestamp)
-        msg_1[bmf.BOT_2.value] = self.__bots[1].toJSON(self.__timestamp)
+        bot_1 = self.__bots[0].toJSON(self.__timestamp)
+        bot_2 = self.__bots[1].toJSON(self.__timestamp)
 
-        msg_2[bmf.BOT_1.value] = self.__bots[1].toJSON(self.__timestamp)
-        msg_2[bmf.BOT_2.value] = self.__bots[0].toJSON(self.__timestamp)
+        self.__scribe.update_stats(bot_1[BotField.USED.value], bot_2[BotField.USED.value],
+                                   summary[bmf.WINNER.value], summary[bmf.ADVANTAGE.value])
+
+        msg_1[bmf.BOT_1.value] = bot_1
+        msg_1[bmf.BOT_2.value] = bot_2
+
+        msg_2[bmf.BOT_1.value] = bot_2
+        msg_2[bmf.BOT_2.value] = bot_1
 
         if msg_2[bmf.ADVANTAGE.value] == ra.BOT_2:
             msg_2[bmf.ADVANTAGE.value] = 1

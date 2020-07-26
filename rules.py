@@ -1,5 +1,9 @@
 from enumeration import Method, Result, Advantage
 
+methodsAsStrings = ['NOP()', 'PATCH()', 'SCAN()', 'OVERLOAD()', 'OVERHEAR()', 'EXPLOIT()', 'INFECT()']
+methodsAsEnums = [Method.NOP, Method.PATCH, Method.SCAN, Method.OVERLOAD,
+                  Method.OVERHEAR, Method.EXPLOIT, Method.INFECT]
+
 nameToMethod = {
         'INFECT()': Method.INFECT,
         'EXPLOIT()': Method.EXPLOIT,
