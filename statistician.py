@@ -28,9 +28,17 @@ class Statistician:
         self.__round_won_by = tree()
         self.__advantage_after_round = tree()
         self.__methods_used = tree()
+        self.__method_used_stats = []
         self.__methods_used_per_round = []
+        self.__methods_used_per_round_stats = []
         self.__won_with_methods = tree()
+        self.__won_with_methods_stats = []
+        self.__won_with_methods_per_round_stats = []
         self.__lost_with_methods = tree()
+        self.__lost_with_methods_stats = []
+        self.__lost_with_methods_per_round_stats = []
+        self.__points_earned_with_method = tree()
+        self.__points_earned_with_method_stats = []
 
         self.__bot1_methods_used = tree()
         self.__bot1_methods_used_per_round = []
@@ -51,6 +59,62 @@ class Statistician:
         self.__stats = {}
         self.__initialize()
 
+    def __prepare_stats(self, general_stats, bot1_stats, bot2_stats):
+        """
+        Private helper method used to prepare connected statistics list object for saving to file.
+        :param general_stats: General statistics as defaultdict object
+        :param bot1_stats: Bot 1 statistics as defaultdict object
+        :param bot2_stats: Bot 2 statistics as defaultdict object
+        :return: List object with general, bot 1 and bot 2 statistics
+        """
+        output = []
+        temp = tree()
+        temp['NAME'] = "GENERAL"
+        temp['STATISTICS'] = general_stats
+        output.append(copy(temp))
+
+        temp['NAME'] = self.__bot1_name
+        temp['STATISTICS'] = bot1_stats
+        output.append(copy(temp))
+
+        temp['NAME'] = self.__bot2_name
+        temp['STATISTICS'] = bot2_stats
+        output.append(copy(temp))
+
+        return output
+
+    def __link_statistics(self):
+        """
+        Private helper method used to make a link between related statistics.
+        With this link, output json will contain more statistics from this same theme.
+        """
+        self.__method_used_stats = \
+            self.__prepare_stats(self.__methods_used, self.__bot1_methods_used, self.__bot2_methods_used)
+
+        self.__methods_used_per_round_stats = \
+            self.__prepare_stats(self.__methods_used_per_round, self.__bot1_methods_used_per_round,
+                                 self.__bot2_methods_used_per_round)
+
+        self.__won_with_methods_stats = \
+            self.__prepare_stats(self.__won_with_methods, self.__bot1_won_with_methods,
+                                 self.__bot2_won_with_methods)
+
+        self.__won_with_methods_per_round_stats = \
+            self.__prepare_stats(tree(), self.__bot1_won_with_methods_per_round,
+                                 self.__bot2_won_with_methods_per_round)
+
+        self.__lost_with_methods_stats = \
+            self.__prepare_stats(self.__lost_with_methods, self.__bot1_lost_with_methods,
+                                 self.__bot2_lost_with_methods)
+
+        self.__lost_with_methods_per_round_stats = \
+            self.__prepare_stats(tree(), self.__bot1_lost_with_methods_per_round,
+                                 self.__bot2_lost_with_methods_per_round)
+
+        self.__points_earned_with_method_stats = \
+            self.__prepare_stats(self.__points_earned_with_method, self.__bot1_points_earned_with_method,
+                                 self.__bot2_points_earned_with_method)
+
     def __initialize(self):
         """
         Private helper method used to initialize with 0 all data containers
@@ -67,6 +131,7 @@ class Statistician:
             self.__methods_used[method] = 0
             self.__won_with_methods[method] = 0
             self.__lost_with_methods[method] = 0
+            self.__points_earned_with_method[method] = 0
 
             self.__bot1_methods_used[method] = 0
             self.__bot1_won_with_methods[method] = 0
@@ -78,26 +143,16 @@ class Statistician:
             self.__bot2_lost_with_methods[method] = 0
             self.__bot2_points_earned_with_method[method] = 0
 
+        self.__link_statistics()
         self.__stats = {'round_won_by': self.__round_won_by,
                         'advantage_after_round': self.__advantage_after_round,
-                        'method_used': self.__methods_used,
-                        f'{self.__bot1_name}_method_used': self.__bot1_methods_used,
-                        f'{self.__bot2_name}_method_used': self.__bot2_methods_used,
-                        'method_used_per_round': self.__methods_used_per_round,
-                        f'{self.__bot1_name}_method_used_per_round': self.__bot1_methods_used_per_round,
-                        f'{self.__bot2_name}_method_used_per_round': self.__bot2_methods_used_per_round,
-                        'won_with_methods': self.__won_with_methods,
-                        'lost_with_methods': self.__lost_with_methods,
-                        f'{self.__bot1_name}_won_with_methods': self.__bot1_won_with_methods,
-                        f'{self.__bot1_name}_lost_with_methods': self.__bot1_lost_with_methods,
-                        f'{self.__bot1_name}_won_with_methods_per_round': self.__bot1_won_with_methods_per_round,
-                        f'{self.__bot1_name}_lost_with_methods_per_round': self.__bot1_lost_with_methods_per_round,
-                        f'{self.__bot1_name}_points_earned_with_method': self.__bot1_points_earned_with_method,
-                        f'{self.__bot2_name}_won_with_methods': self.__bot2_won_with_methods,
-                        f'{self.__bot2_name}_lost_with_methods': self.__bot2_lost_with_methods,
-                        f'{self.__bot2_name}_won_with_methods_per_round': self.__bot2_won_with_methods_per_round,
-                        f'{self.__bot2_name}_lost_with_methods_per_round': self.__bot2_lost_with_methods_per_round,
-                        f'{self.__bot2_name}_points_earned_with_method': self.__bot2_points_earned_with_method}
+                        'method_used': self.__method_used_stats,
+                        'method_used_per_round': self.__methods_used_per_round_stats,
+                        'won_with_methods': self.__won_with_methods_stats,
+                        'won_with_methods_per_round': self.__won_with_methods_per_round_stats,
+                        'lost_with_methods': self.__lost_with_methods_stats,
+                        'lost_with_methods_per_round': self.__lost_with_methods_per_round_stats,
+                        'points_earned_with_method': self.__points_earned_with_method_stats}
 
     def __update_round_won_by(self, winner):
         """
@@ -199,6 +254,8 @@ class Statistician:
                                               self.__bot2_won_with_methods[method]
             self.__lost_with_methods[method] = self.__bot1_lost_with_methods[method] + \
                                                self.__bot2_lost_with_methods[method]
+            self.__points_earned_with_method[method] = self.__bot1_points_earned_with_method[method] + \
+                                                       self.__bot2_points_earned_with_method[method]
 
         for name, data in self.__stats.items():
             with open(f'{path}/{name}.json', 'w') as file:
