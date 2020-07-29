@@ -13,6 +13,52 @@ from collections import defaultdict
 def tree(): return defaultdict(tree)
 
 
+GENERAL = 'GENERAL'
+NAME = 'NAME'
+STATISTICS = 'STATISTICS'
+TIME = 'Time'
+DRAW = 'Draw'
+
+
+class StatisticBank:
+    method_used_stats = []
+    methods_used_per_round_stats = []
+    won_with_methods_stats = []
+    won_with_methods_per_round_stats = []
+    lost_with_methods_stats = []
+    lost_with_methods_per_round_stats = []
+    points_earned_with_method_stats = []
+    stats_list = {1: method_used_stats, 2: methods_used_per_round_stats, 3: won_with_methods_stats,
+                  4: won_with_methods_per_round_stats, 5: lost_with_methods_stats,
+                  6: lost_with_methods_per_round_stats, 7: points_earned_with_method_stats}
+
+    def __init__(self, name):
+        self.round_won_by = tree()
+        self.advantage_after_round = tree()
+        self.methods_used = tree()
+        self.methods_used_per_round = []
+        self.won_with_methods = tree()
+        self.won_with_methods_per_round = []
+        self.lost_with_methods = tree()
+        self.lost_with_methods_per_round = []
+        self.points_earned_with_method = tree()
+        self.stats_list = {1: self.methods_used, 2: self.methods_used_per_round, 3: self.won_with_methods,
+                           4: self.won_with_methods_per_round, 5: self.lost_with_methods,
+                           6: self.lost_with_methods_per_round, 7: self.points_earned_with_method}
+        self.__name = name
+        for connect, stat in StatisticBank.stats_list.items():
+            temp = tree()
+            temp[NAME] = self.__name
+            temp[STATISTICS] = self.stats_list[connect]
+            stat.append(copy(temp))
+
+        for method in rules.methodsAsStrings:
+            self.methods_used[method] = 0
+            self.won_with_methods[method] = 0
+            self.lost_with_methods[method] = 0
+            self.points_earned_with_method[method] = 0
+
+
 class Statistician:
     """
     Class contains all the methods responsible for the logic
@@ -24,135 +70,27 @@ class Statistician:
         self.__bot2_name = bot2_name
         self.__game_id = game_id
         self.__round = 0
+        self.__bank = {GENERAL: StatisticBank(GENERAL),
+                       self.__bot1_name: StatisticBank(self.__bot1_name),
+                       self.__bot2_name: StatisticBank(self.__bot2_name)}
 
-        self.__round_won_by = tree()
-        self.__advantage_after_round = tree()
-        self.__methods_used = tree()
-        self.__method_used_stats = []
-        self.__methods_used_per_round = []
-        self.__methods_used_per_round_stats = []
-        self.__won_with_methods = tree()
-        self.__won_with_methods_stats = []
-        self.__won_with_methods_per_round_stats = []
-        self.__lost_with_methods = tree()
-        self.__lost_with_methods_stats = []
-        self.__lost_with_methods_per_round_stats = []
-        self.__points_earned_with_method = tree()
-        self.__points_earned_with_method_stats = []
+        self.__bank[GENERAL].round_won_by[DRAW] = 0
+        self.__bank[GENERAL].round_won_by[self.__bot1_name] = 0
+        self.__bank[GENERAL].round_won_by[self.__bot2_name] = 0
 
-        self.__bot1_methods_used = tree()
-        self.__bot1_methods_used_per_round = []
-        self.__bot1_won_with_methods = tree()
-        self.__bot1_won_with_methods_per_round = []
-        self.__bot1_lost_with_methods = tree()
-        self.__bot1_lost_with_methods_per_round = []
-        self.__bot1_points_earned_with_method = tree()
+        self.__bank[GENERAL].advantage_after_round[TIME] = 0
+        self.__bank[GENERAL].advantage_after_round[self.__bot1_name] = 0
+        self.__bank[GENERAL].advantage_after_round[self.__bot2_name] = 0
 
-        self.__bot2_methods_used = tree()
-        self.__bot2_methods_used_per_round = []
-        self.__bot2_won_with_methods = tree()
-        self.__bot2_won_with_methods_per_round = []
-        self.__bot2_lost_with_methods = tree()
-        self.__bot2_lost_with_methods_per_round = []
-        self.__bot2_points_earned_with_method = tree()
-
-        self.__stats = {}
-        self.__initialize()
-
-    def __prepare_stats(self, general_stats, bot1_stats, bot2_stats):
-        """
-        Private helper method used to prepare connected statistics list object for saving to file.
-        :param general_stats: General statistics as defaultdict object
-        :param bot1_stats: Bot 1 statistics as defaultdict object
-        :param bot2_stats: Bot 2 statistics as defaultdict object
-        :return: List object with general, bot 1 and bot 2 statistics
-        """
-        output = []
-        temp = tree()
-        temp['NAME'] = "GENERAL"
-        temp['STATISTICS'] = general_stats
-        output.append(copy(temp))
-
-        temp['NAME'] = self.__bot1_name
-        temp['STATISTICS'] = bot1_stats
-        output.append(copy(temp))
-
-        temp['NAME'] = self.__bot2_name
-        temp['STATISTICS'] = bot2_stats
-        output.append(copy(temp))
-
-        return output
-
-    def __link_statistics(self):
-        """
-        Private helper method used to make a link between related statistics.
-        With this link, output json will contain more statistics from this same theme.
-        """
-        self.__method_used_stats = \
-            self.__prepare_stats(self.__methods_used, self.__bot1_methods_used, self.__bot2_methods_used)
-
-        self.__methods_used_per_round_stats = \
-            self.__prepare_stats(self.__methods_used_per_round, self.__bot1_methods_used_per_round,
-                                 self.__bot2_methods_used_per_round)
-
-        self.__won_with_methods_stats = \
-            self.__prepare_stats(self.__won_with_methods, self.__bot1_won_with_methods,
-                                 self.__bot2_won_with_methods)
-
-        self.__won_with_methods_per_round_stats = \
-            self.__prepare_stats(tree(), self.__bot1_won_with_methods_per_round,
-                                 self.__bot2_won_with_methods_per_round)
-
-        self.__lost_with_methods_stats = \
-            self.__prepare_stats(self.__lost_with_methods, self.__bot1_lost_with_methods,
-                                 self.__bot2_lost_with_methods)
-
-        self.__lost_with_methods_per_round_stats = \
-            self.__prepare_stats(tree(), self.__bot1_lost_with_methods_per_round,
-                                 self.__bot2_lost_with_methods_per_round)
-
-        self.__points_earned_with_method_stats = \
-            self.__prepare_stats(self.__points_earned_with_method, self.__bot1_points_earned_with_method,
-                                 self.__bot2_points_earned_with_method)
-
-    def __initialize(self):
-        """
-        Private helper method used to initialize with 0 all data containers
-        """
-        self.__round_won_by['Draw'] = 0
-        self.__round_won_by[self.__bot1_name] = 0
-        self.__round_won_by[self.__bot2_name] = 0
-
-        self.__advantage_after_round['Time'] = 0
-        self.__advantage_after_round[self.__bot1_name] = 0
-        self.__advantage_after_round[self.__bot2_name] = 0
-
-        for method in rules.methodsAsStrings:
-            self.__methods_used[method] = 0
-            self.__won_with_methods[method] = 0
-            self.__lost_with_methods[method] = 0
-            self.__points_earned_with_method[method] = 0
-
-            self.__bot1_methods_used[method] = 0
-            self.__bot1_won_with_methods[method] = 0
-            self.__bot1_lost_with_methods[method] = 0
-            self.__bot1_points_earned_with_method[method] = 0
-
-            self.__bot2_methods_used[method] = 0
-            self.__bot2_won_with_methods[method] = 0
-            self.__bot2_lost_with_methods[method] = 0
-            self.__bot2_points_earned_with_method[method] = 0
-
-        self.__link_statistics()
-        self.__stats = {'round_won_by': self.__round_won_by,
-                        'advantage_after_round': self.__advantage_after_round,
-                        'method_used': self.__method_used_stats,
-                        'method_used_per_round': self.__methods_used_per_round_stats,
-                        'won_with_methods': self.__won_with_methods_stats,
-                        'won_with_methods_per_round': self.__won_with_methods_per_round_stats,
-                        'lost_with_methods': self.__lost_with_methods_stats,
-                        'lost_with_methods_per_round': self.__lost_with_methods_per_round_stats,
-                        'points_earned_with_method': self.__points_earned_with_method_stats}
+        self.__stats = {'round_won_by': self.__bank[GENERAL].round_won_by,
+                        'advantage_after_round': self.__bank[GENERAL].advantage_after_round,
+                        'method_used': StatisticBank.method_used_stats,
+                        'method_used_per_round': StatisticBank.methods_used_per_round_stats,
+                        'won_with_methods': StatisticBank.won_with_methods_stats,
+                        'won_with_methods_per_round': StatisticBank.won_with_methods_per_round_stats,
+                        'lost_with_methods': StatisticBank.lost_with_methods_stats,
+                        'lost_with_methods_per_round': StatisticBank.lost_with_methods_per_round_stats,
+                        'points_earned_with_method': StatisticBank.points_earned_with_method_stats}
 
     def __update_round_won_by(self, winner):
         """
@@ -160,11 +98,11 @@ class Statistician:
         :param winner: RoundWinner from enumeration package with information about round winner
         """
         if winner is rw.DRAW:
-            self.__round_won_by['Draw'] += 1
+            self.__bank[GENERAL].round_won_by[DRAW] += 1
         elif winner is rw.BOT_1:
-            self.__round_won_by[self.__bot1_name] += 1
+            self.__bank[GENERAL].round_won_by[self.__bot1_name] += 1
         else:
-            self.__round_won_by[self.__bot2_name] += 1
+            self.__bank[GENERAL].round_won_by[self.__bot2_name] += 1
 
     def __update_won_lost_by_method(self, bot1_method, bot2_method, winner):
         """
@@ -173,17 +111,19 @@ class Statistician:
         :param bot2_method: String with method used by BOT2
         :param winner: RoundWinner from enumeration package with information about round winner
         """
+        bot1 = self.__bank[self.__bot1_name]
+        bot2 = self.__bank[self.__bot2_name]
         if winner is rw.BOT_1:
-            self.__bot1_won_with_methods[bot1_method] += 1
-            self.__bot2_lost_with_methods[bot2_method] += 1
+            bot1.won_with_methods[bot1_method] += 1
+            bot2.lost_with_methods[bot2_method] += 1
         elif winner is rw.BOT_2:
-            self.__bot1_lost_with_methods[bot1_method] += 1
-            self.__bot2_won_with_methods[bot2_method] += 1
+            bot1.lost_with_methods[bot1_method] += 1
+            bot2.won_with_methods[bot2_method] += 1
 
-        self.__bot1_won_with_methods_per_round.append(copy(self.__bot1_won_with_methods))
-        self.__bot1_lost_with_methods_per_round.append(copy(self.__bot1_lost_with_methods))
-        self.__bot2_won_with_methods_per_round.append(copy(self.__bot2_won_with_methods))
-        self.__bot2_lost_with_methods_per_round.append(copy(self.__bot2_lost_with_methods))
+        bot1.won_with_methods_per_round.append(copy(bot1.won_with_methods))
+        bot1.lost_with_methods_per_round.append(copy(bot1.lost_with_methods))
+        bot2.won_with_methods_per_round.append(copy(bot2.won_with_methods))
+        bot2.lost_with_methods_per_round.append(copy(bot2.lost_with_methods))
 
     def __update_points_earned_with_method(self, bot1_method, bot2_method, winner):
         """
@@ -194,10 +134,10 @@ class Statistician:
         """
         if winner is rw.BOT_1:
             points = rules.methodToPrize[rules.nameToMethod[bot1_method]]
-            self.__bot1_points_earned_with_method[bot1_method] += points
+            self.__bank[self.__bot1_name].points_earned_with_method[bot1_method] += points
         elif winner is rw.BOT_2:
             points = rules.methodToPrize[rules.nameToMethod[bot2_method]]
-            self.__bot2_points_earned_with_method[bot2_method] += points
+            self.__bank[self.__bot2_name].points_earned_with_method[bot2_method] += points
 
     def __update_advantage_after_rounds(self, advantage):
         """
@@ -205,11 +145,11 @@ class Statistician:
         :param advantage: RoundAdvantage from enumeration package with information about round advantage
         """
         if advantage is ra.TIME:
-            self.__advantage_after_round['Time'] += 1
+            self.__bank[GENERAL].advantage_after_round[TIME] += 1
         elif advantage is ra.BOT_1:
-            self.__advantage_after_round[self.__bot1_name] += 1
+            self.__bank[GENERAL].advantage_after_round[self.__bot1_name] += 1
         else:
-            self.__advantage_after_round[self.__bot2_name] += 1
+            self.__bank[GENERAL].advantage_after_round[self.__bot2_name] += 1
 
     def __update_methods_used(self, bot1_method, bot2_method):
         """
@@ -217,15 +157,17 @@ class Statistician:
         :param bot1_method: String with method used by BOT1
         :param bot2_method: String with method used by BOT2
         """
-        self.__bot1_methods_used[bot1_method] += 1
-        self.__bot2_methods_used[bot2_method] += 1
+        bot1 = self.__bank[self.__bot1_name]
+        bot2 = self.__bank[self.__bot2_name]
+        bot1.methods_used[bot1_method] += 1
+        bot2.methods_used[bot2_method] += 1
 
         for method in rules.methodsAsStrings:
-            self.__methods_used[method] = self.__bot1_methods_used[method] + self.__bot2_methods_used[method]
+            self.__bank[GENERAL].methods_used[method] = bot1.methods_used[method] + bot2.methods_used[method]
 
-        self.__methods_used_per_round.append(copy(self.__methods_used))
-        self.__bot1_methods_used_per_round.append(copy(self.__bot1_methods_used))
-        self.__bot2_methods_used_per_round.append(copy(self.__bot2_methods_used))
+        self.__bank[GENERAL].methods_used_per_round.append(copy(self.__bank[GENERAL].methods_used))
+        bot1.methods_used_per_round.append(copy(bot1.methods_used))
+        bot2.methods_used_per_round.append(copy(bot2.methods_used))
 
     def update_stats(self, bot1_method, bot2_method, winner, advantage):
         """
@@ -248,14 +190,15 @@ class Statistician:
         """
         path = f"./history/games/{self.__game_id}/stats"
         Path(path).mkdir(parents=True, exist_ok=True)
+        bot1 = self.__bank[self.__bot1_name]
+        bot2 = self.__bank[self.__bot2_name]
+        general = self.__bank[GENERAL]
 
         for method in rules.methodsAsStrings:
-            self.__won_with_methods[method] = self.__bot1_won_with_methods[method] + \
-                                              self.__bot2_won_with_methods[method]
-            self.__lost_with_methods[method] = self.__bot1_lost_with_methods[method] + \
-                                               self.__bot2_lost_with_methods[method]
-            self.__points_earned_with_method[method] = self.__bot1_points_earned_with_method[method] + \
-                                                       self.__bot2_points_earned_with_method[method]
+            general.won_with_methods[method] = bot1.won_with_methods[method] + bot2.won_with_methods[method]
+            general.lost_with_methods[method] = bot1.lost_with_methods[method] + bot2.lost_with_methods[method]
+            general.points_earned_with_method[method] = bot1.points_earned_with_method[method] + \
+                                                        bot2.points_earned_with_method[method]
 
         for name, data in self.__stats.items():
             with open(f'{path}/{name}.json', 'w') as file:
