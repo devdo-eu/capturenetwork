@@ -48,7 +48,7 @@ class Battleground(threading.Thread):
         Path(path).mkdir(parents=True, exist_ok=True)
         with open(f'{path}/{self.__fileLogName}', 'w') as file:
             file.writelines(json.dumps(self.__gameRecord, sort_keys=True, indent=4))
-        self.__scribe.dump_statistics()
+        self.__scribe.dumpStatistics()
 
         try:
             with open('./history/game_list.json', 'r') as file:
@@ -176,8 +176,8 @@ class Battleground(threading.Thread):
         bot_1 = self.__bots[0].toJSON(self.__timestamp)
         bot_2 = self.__bots[1].toJSON(self.__timestamp)
 
-        self.__scribe.update_stats(bot_1[BotField.USED.value], bot_2[BotField.USED.value],
-                                   summary[bmf.WINNER.value], summary[bmf.ADVANTAGE.value])
+        self.__scribe.updateStats(bot_1[BotField.USED.value], bot_2[BotField.USED.value],
+                                  summary[bmf.WINNER.value], summary[bmf.ADVANTAGE.value])
 
         msg_1[bmf.BOT_1.value] = bot_1
         msg_1[bmf.BOT_2.value] = bot_2

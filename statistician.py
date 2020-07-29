@@ -92,7 +92,7 @@ class Statistician:
                         'lost_with_methods_per_round': StatisticBank.lost_with_methods_per_round_stats,
                         'points_earned_with_method': StatisticBank.points_earned_with_method_stats}
 
-    def __update_round_won_by(self, winner):
+    def __updateRoundWonBy(self, winner):
         """
         Private helper method used to updating round winner statistics
         :param winner: RoundWinner from enumeration package with information about round winner
@@ -104,7 +104,7 @@ class Statistician:
         else:
             self.__bank[GENERAL].round_won_by[self.__bot2_name] += 1
 
-    def __update_won_lost_by_method(self, bot1_method, bot2_method, winner):
+    def __updateWonLostByMethod(self, bot1_method, bot2_method, winner):
         """
         Private helper method used to update stats related with won and lost with method
         :param bot1_method: String with method used by BOT1
@@ -125,7 +125,7 @@ class Statistician:
         bot2.won_with_methods_per_round.append(copy(bot2.won_with_methods))
         bot2.lost_with_methods_per_round.append(copy(bot2.lost_with_methods))
 
-    def __update_points_earned_with_method(self, bot1_method, bot2_method, winner):
+    def __updatePointsEarnedWithMethod(self, bot1_method, bot2_method, winner):
         """
         Private helper method used to update stats related with points earned with methods
         :param bot1_method: String with method used by BOT1
@@ -139,7 +139,7 @@ class Statistician:
             points = rules.methodToPrize[rules.nameToMethod[bot2_method]]
             self.__bank[self.__bot2_name].points_earned_with_method[bot2_method] += points
 
-    def __update_advantage_after_rounds(self, advantage):
+    def __updateAdvantageAfterRounds(self, advantage):
         """
         Private helper method used to update stats related with getting advantage after round
         :param advantage: RoundAdvantage from enumeration package with information about round advantage
@@ -151,7 +151,7 @@ class Statistician:
         else:
             self.__bank[GENERAL].advantage_after_round[self.__bot2_name] += 1
 
-    def __update_methods_used(self, bot1_method, bot2_method):
+    def __updateMethodsUsed(self, bot1_method, bot2_method):
         """
         Private helper method used to update stats related with stats about methods used in game
         :param bot1_method: String with method used by BOT1
@@ -169,7 +169,7 @@ class Statistician:
         bot1.methods_used_per_round.append(copy(bot1.methods_used))
         bot2.methods_used_per_round.append(copy(bot2.methods_used))
 
-    def update_stats(self, bot1_method, bot2_method, winner, advantage):
+    def updateStats(self, bot1_method, bot2_method, winner, advantage):
         """
         Public method used to update all statistics gathered in game
         :param bot1_method: String with method used by BOT1
@@ -178,13 +178,13 @@ class Statistician:
         :param advantage:
         """
         self.__round += 1
-        self.__update_round_won_by(winner)
-        self.__update_advantage_after_rounds(advantage)
-        self.__update_methods_used(bot1_method, bot2_method)
-        self.__update_won_lost_by_method(bot1_method, bot2_method, winner)
-        self.__update_points_earned_with_method(bot1_method, bot2_method, winner)
+        self.__updateRoundWonBy(winner)
+        self.__updateAdvantageAfterRounds(advantage)
+        self.__updateMethodsUsed(bot1_method, bot2_method)
+        self.__updateWonLostByMethod(bot1_method, bot2_method, winner)
+        self.__updatePointsEarnedWithMethod(bot1_method, bot2_method, winner)
 
-    def dump_statistics(self):
+    def dumpStatistics(self):
         """
         Public method used to trigger saving all gathered data to files
         """
