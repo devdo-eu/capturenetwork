@@ -3,6 +3,7 @@ import json
 import logging
 import threading
 import time
+from pathlib import Path
 from collections import defaultdict
 from collections import deque
 
@@ -57,6 +58,7 @@ class Dispatcher(threading.Thread):
                 else:
                     logging.info('game_list.json file is empty, GAME_ID set to 0.')
         except FileNotFoundError:
+            Path('./history').mkdir(parents=True, exist_ok=True)
             logging.info(self.__name + ': No game_list.json file, GAME_ID set to 0.')
 
     def __createBattle(self, id, server):
