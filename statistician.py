@@ -21,18 +21,8 @@ DRAW = 'Draw'
 
 
 class StatisticBank:
-    method_used_stats = []
-    methods_used_per_round_stats = []
-    won_with_methods_stats = []
-    won_with_methods_per_round_stats = []
-    lost_with_methods_stats = []
-    lost_with_methods_per_round_stats = []
-    points_earned_with_method_stats = []
-    stats_list = {1: method_used_stats, 2: methods_used_per_round_stats, 3: won_with_methods_stats,
-                  4: won_with_methods_per_round_stats, 5: lost_with_methods_stats,
-                  6: lost_with_methods_per_round_stats, 7: points_earned_with_method_stats}
 
-    def __init__(self, name):
+    def __init__(self, name, container):
         self.round_won_by = tree()
         self.advantage_after_round = tree()
         self.methods_used = tree()
@@ -46,7 +36,7 @@ class StatisticBank:
                            4: self.won_with_methods_per_round, 5: self.lost_with_methods,
                            6: self.lost_with_methods_per_round, 7: self.points_earned_with_method}
         self.__name = name
-        for connect, stat in StatisticBank.stats_list.items():
+        for connect, stat in container.stats_list.items():
             temp = tree()
             temp[NAME] = self.__name
             temp[STATISTICS] = self.stats_list[connect]
@@ -66,13 +56,27 @@ class Statistician:
     """
 
     def __init__(self, bot1_name, bot2_name, game_id):
+
+        self.method_used_stats = []
+        self.methods_used_per_round_stats = []
+        self.won_with_methods_stats = []
+        self.won_with_methods_per_round_stats = []
+        self.lost_with_methods_stats = []
+        self.lost_with_methods_per_round_stats = []
+        self.points_earned_with_method_stats = []
+
+        self.stats_list = {1: self.method_used_stats, 2: self.methods_used_per_round_stats,
+                           3: self.won_with_methods_stats, 4: self.won_with_methods_per_round_stats,
+                           5: self.lost_with_methods_stats, 6: self.lost_with_methods_per_round_stats,
+                           7: self.points_earned_with_method_stats}
+
         self.__bot1_name = bot1_name
         self.__bot2_name = bot2_name
         self.__game_id = game_id
         self.__round = 0
-        self.__bank = {GENERAL: StatisticBank(GENERAL),
-                       self.__bot1_name: StatisticBank(self.__bot1_name),
-                       self.__bot2_name: StatisticBank(self.__bot2_name)}
+        self.__bank = {GENERAL: StatisticBank(GENERAL, self),
+                       self.__bot1_name: StatisticBank(self.__bot1_name, self),
+                       self.__bot2_name: StatisticBank(self.__bot2_name, self)}
 
         self.__bank[GENERAL].round_won_by[DRAW] = 0
         self.__bank[GENERAL].round_won_by[self.__bot1_name] = 0
@@ -84,13 +88,13 @@ class Statistician:
 
         self.__stats = {'round_won_by': self.__bank[GENERAL].round_won_by,
                         'advantage_after_round': self.__bank[GENERAL].advantage_after_round,
-                        'method_used': StatisticBank.method_used_stats,
-                        'method_used_per_round': StatisticBank.methods_used_per_round_stats,
-                        'won_with_methods': StatisticBank.won_with_methods_stats,
-                        'won_with_methods_per_round': StatisticBank.won_with_methods_per_round_stats,
-                        'lost_with_methods': StatisticBank.lost_with_methods_stats,
-                        'lost_with_methods_per_round': StatisticBank.lost_with_methods_per_round_stats,
-                        'points_earned_with_method': StatisticBank.points_earned_with_method_stats}
+                        'method_used': self.method_used_stats,
+                        'method_used_per_round': self.methods_used_per_round_stats,
+                        'won_with_methods': self.won_with_methods_stats,
+                        'won_with_methods_per_round': self.won_with_methods_per_round_stats,
+                        'lost_with_methods': self.lost_with_methods_stats,
+                        'lost_with_methods_per_round': self.lost_with_methods_per_round_stats,
+                        'points_earned_with_method': self.points_earned_with_method_stats}
 
     def __updateRoundWonBy(self, winner):
         """
