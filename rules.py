@@ -35,7 +35,7 @@ methodToPrize = {
         }
 
 timeOfRound = 50  # milliseconds
-numberOfRounds = 300
+numberOfRounds = 600
 
 methodToMethodResult = {
         Method.INFECT: {

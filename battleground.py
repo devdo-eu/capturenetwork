@@ -14,6 +14,7 @@ from enumeration import RoundAdvantage as ra
 from enumeration import RoundWinner as rw
 from enumeration import BotField
 from statistician import Statistician
+from database import Database as db
 
 
 def tree(): return defaultdict(tree)
@@ -44,10 +45,11 @@ class Battleground(threading.Thread):
         Method responsible for save battle data to file on disk.
         """
         self.__fileLogName = 'game_record.json'
+        full_record = json.dumps(self.__gameRecord, sort_keys=True, indent=4)
         path = f"./history/games/{self.__thread_id}"
         Path(path).mkdir(parents=True, exist_ok=True)
         with open(f'{path}/{self.__fileLogName}', 'w') as file:
-            file.writelines(json.dumps(self.__gameRecord, sort_keys=True, indent=4))
+            file.writelines(full_record)
         self.__scribe.dumpStatistics()
 
         try:
@@ -76,6 +78,24 @@ class Battleground(threading.Thread):
             data[gff.DATE.value] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             game_list.append(data)
             file.writelines(json.dumps(game_list, sort_keys=True, indent=4) + '\n')
+
+        self.__saveToDatabase(data, full_record)
+
+    def __saveToDatabase(self, data, full_record):
+        """
+        Method responsible for saving game record into database
+        @param data: structure needed for date of game
+        @param full_record: game record to be saved inside DB
+        """
+        db_bot_0_id = db().getBot(self.__bots[0].name())[0]
+        db_bot_1_id = db().getBot(self.__bots[1].name())[0]
+        rules_id = db().insertRules(rules.timeOfRound, rules.numberOfRounds)
+        db().insertGames(data[gff.DATE.value], db_bot_0_id, db_bot_1_id,
+                         self.__bots[0].points(), self.__bots[1].points(), rules_id, full_record)
+        if self.__bots[0].points() > self.__bots[1].points():
+            db().updateChallangers(self.__bots[0].name(), self.__bots[1].name())
+        else:
+            db().updateChallangers(self.__bots[1].name(), self.__bots[0].name())
 
     def __runRound(self):
         """
@@ -141,7 +161,7 @@ class Battleground(threading.Thread):
 
         return winner
 
-    def __deremineAdvantage(self):
+    def __determineAdvantage(self):
         """
         Helper method used to determinate which bot will have advantage next round
         :return: RoundAdvantage enum
@@ -209,7 +229,7 @@ class Battleground(threading.Thread):
         summary = tree()
         summary[bmf.TIME.value] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
         summary[bmf.WINNER.value] = self.__determineWinner()
-        summary[bmf.ADVANTAGE.value] = self.__deremineAdvantage()
+        summary[bmf.ADVANTAGE.value] = self.__determineAdvantage()
         summary[bmf.ROUND.value] = str(self.__passedRounds) + '/' + str(rules.numberOfRounds)
         msg_1, msg_2 = self.__prepareBotMessages(summary)
 

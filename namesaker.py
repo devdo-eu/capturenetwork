@@ -3,6 +3,8 @@ import threading
 import copy
 import time
 
+from database import Database as db
+
 
 class NameSaker(threading.Thread):
     """
@@ -25,6 +27,12 @@ class NameSaker(threading.Thread):
                         self.__bot.putName(name)
                         logging.info(f'Namesaker: Bot introduced himself as {name}')
                         del data[peer_address]
+                        if not db().botExist(name):
+                            logging.info(f'Namesaker: This bot is a new challenger!')
+                            db().insertBot(name)
+
+                        elo = db().getBot(name)[-1]
+                        logging.info(f'Namesaker: This bot ELO rating is {elo}!')
                         named = True
                 except OSError:
                     named = True
