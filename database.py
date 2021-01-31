@@ -57,6 +57,18 @@ class Database:
             return row[0], row[1], row[2], row[3]
         return -1, -1, -1
 
+    @property
+    def getBots(self):
+        """
+        Method used to get bots data from database ordered by ELO
+        @return: list of all rows from BOTS table
+        """
+        cursor = self.conn.execute("SELECT * from BOTS ORDER BY ELO DESC")
+        rows = []
+        for row in cursor:
+            rows.append(row)
+        return rows
+
     def updateChallangers(self, winner, loser):
         """
         Methos used to update Win/Lost/Elo values of bots inside database
