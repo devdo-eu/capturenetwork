@@ -4,13 +4,10 @@ Package contains Statistician class used for generating all statistic data from 
 import subprocess
 from database import Database as db
 
-
 class Statistician:
 
     @staticmethod
     def __generateLeaderboard():
-        bots = db().getBots
-        titles = ["Place", "Name", "Fights", "Won", "Lost", "W/L ratio", "ELO"]
         styles = """
         <style>
         table {
@@ -78,18 +75,22 @@ class Statistician:
         <table>
         <tr>
         """
+        titles = ["Place", "Name", "Fights", "Won", "Lost", "W/L ratio", "ELO"]
         for title in titles:
             leaderboard_html += f"""
             <th>{title}</th>
             """
         place = 0
+        bots = db().getBots
         for row in bots:
             place += 1
-            data = [place, row[1], row[2] + row[3], row[2], row[3], round(100 * row[2] / (row[3] + row[2])), row[4]]
+            data = [place, row[1], row[2] + row[3], row[2], row[3], "----", row[4]]
+            if row[3] + row[2] > 0:
+                data[5] = round(100 * row[2] / (row[3] + row[2]))
             leaderboard_html += f'</tr><tr><td class="place">{data[0]}</td>'
             for ind in range(1, len(titles)):
                 mark = ""
-                if ind is 5:
+                if ind == 5:
                     mark = "%"
                 leaderboard_html += f"""
                 <td>{data[ind]}{mark}</td>

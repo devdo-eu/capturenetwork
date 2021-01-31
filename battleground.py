@@ -43,7 +43,15 @@ class Battleground(threading.Thread):
         Method responsible for save battle data to file on disk.
         """
         full_record = json.dumps(self.__gameRecord, sort_keys=True, indent=4)
-        Statistician.generateHTMLs()
+        data = tree()
+        data[gff.GAME_ID.value] = self.__thread_id
+        data[gff.BOT_1.value][gff.BOT_NAME.value] = self.__bots[0].name()
+        data[gff.BOT_1.value][gff.BOT_POINTS.value] = self.__bots[0].points()
+        data[gff.BOT_2.value][gff.BOT_NAME.value] = self.__bots[1].name()
+        data[gff.BOT_2.value][gff.BOT_POINTS.value] = self.__bots[1].points()
+        data[gff.ROUNDS.value] = self.__passedRounds
+        data[gff.DATE.value] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        self.__saveToDatabase(data, full_record)
 
         try:
             with open('./history/game_list.json', 'r') as file:
@@ -61,18 +69,10 @@ class Battleground(threading.Thread):
             game_list = []
 
         with open('./history/game_list.json', 'w') as file:
-            data = tree()
-            data[gff.GAME_ID.value] = self.__thread_id
-            data[gff.BOT_1.value][gff.BOT_NAME.value] = self.__bots[0].name()
-            data[gff.BOT_1.value][gff.BOT_POINTS.value] = self.__bots[0].points()
-            data[gff.BOT_2.value][gff.BOT_NAME.value] = self.__bots[1].name()
-            data[gff.BOT_2.value][gff.BOT_POINTS.value] = self.__bots[1].points()
-            data[gff.ROUNDS.value] = self.__passedRounds
-            data[gff.DATE.value] = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             game_list.append(data)
             file.writelines(json.dumps(game_list, sort_keys=True, indent=4) + '\n')
 
-        self.__saveToDatabase(data, full_record)
+        Statistician.generateHTMLs()
 
     def __saveToDatabase(self, data, full_record):
         """
