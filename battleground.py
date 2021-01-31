@@ -5,7 +5,6 @@ import threading
 import time
 from collections import defaultdict
 from datetime import datetime
-from pathlib import Path
 
 import rules
 from enumeration import BotMessageField as bmf
