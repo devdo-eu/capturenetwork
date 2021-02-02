@@ -64,10 +64,7 @@ class Database:
         @return: list of all rows from BOTS table
         """
         cursor = self.conn.execute("SELECT * from BOTS ORDER BY ELO DESC")
-        rows = []
-        for row in cursor:
-            rows.append(row)
-        return rows
+        return cursor.fetchall()
 
     def updateChallangers(self, winner, loser):
         """

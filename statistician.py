@@ -3,66 +3,13 @@ Package contains Statistician class used for generating all statistic data from 
 """
 import subprocess
 from database import Database as db
+import styles
+
 
 class Statistician:
 
     @staticmethod
     def __generateLeaderboard():
-        styles = """
-        <style>
-        table {
-          font-family: arial, sans-serif;
-          border-collapse: collapse;
-          width: 100%;
-        }
-
-        th {
-          border: 1px solid #000000;
-          text-align: center;
-          color: #616af2;
-          background-color: #000000;
-          padding: 8px;
-        }
-
-        td {
-          border: 1px solid #000000;
-          text-align: left;
-          padding: 8px;
-        }
-
-        body {
-          background-image: url(https://i.pinimg.com/originals/e7/c8/8f/e7c88f4f9c62bfc2204afe22b89a78b4.jpg);
-          background-repeat: no-repeat;
-        }
-
-        .center {
-          margin: auto;
-          width: 60%;
-          border: 3px solid #000000;
-          padding: 0px;
-        }
-
-        .title {
-          margin: auto;
-          text-align: center;
-          padding: 16px;
-          color: #2870bf;
-        }
-
-        .place {
-          text-align: center;
-        }
-
-        tr:nth-child(even) {
-          background-color: #cccccc;
-        }
-
-        tr:nth-child(odd) {
-          background-color: #ffffff;
-        }
-
-        </style>
-        """
         leaderboard_html = f"""
         <!DOCTYPE html>
         <html>
@@ -84,9 +31,10 @@ class Statistician:
         bots = db().getBots
         for row in bots:
             place += 1
-            data = [place, row[1], row[2] + row[3], row[2], row[3], "----", row[4]]
-            if row[3] + row[2] > 0:
-                data[5] = round(100 * row[2] / (row[3] + row[2]))
+            name, won, lost, elo = row[1], row[2], row[3], row[4]
+            data = [place, name, won + lost, won, lost, "----", elo]
+            if won + lost > 0:
+                data[5] = round(100 * won / (won + lost))
             leaderboard_html += f'</tr><tr><td class="place">{data[0]}</td>'
             for ind in range(1, len(titles)):
                 mark = ""
