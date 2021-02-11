@@ -3,7 +3,7 @@ Package contains Statistician class used for generating all statistic data from 
 """
 import subprocess
 from database import Database as db
-import styles
+from styles import bootstrap, bootstrap_js, styles
 
 
 class Statistician:
@@ -12,7 +12,8 @@ class Statistician:
     def __generateLeaderboard():
         leaderboard_html = f"""
         <!DOCTYPE html>
-        <html>
+        <html lang="en">
+        {bootstrap}
         <head>
         {styles}
         </head>
@@ -44,9 +45,10 @@ class Statistician:
                 <td>{data[ind]}{mark}</td>
                 """
             leaderboard_html += '</tr>'
-        leaderboard_html += """
+        leaderboard_html += f"""
         </table>
         </div>
+        {bootstrap_js}
         </body>
         </html>
         """
