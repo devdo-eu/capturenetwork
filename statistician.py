@@ -3,7 +3,7 @@ Package contains Statistician class used for generating all statistic data from 
 """
 import subprocess
 from database import Database as db
-from styles import bootstrap, bootstrap_js, styles
+from styles import bootstrap, bootstrap_js
 
 
 class Statistician:
@@ -15,13 +15,12 @@ class Statistician:
         <html lang="en">
         {bootstrap}
         <head>
-        {styles}
         </head>
         <body>
-        <h1 class="title">Capture Network ELO rating</h1>
-        <div class="center">
-        <table>
-        <tr>
+        <h1 class="text-center">Capture Network ELO rating</h1>
+        <div>
+          <table class="table table-dark table-hover">
+            <tr>
         """
         titles = ["Place", "Name", "Fights", "Won", "Lost", "W/L ratio", "ELO"]
         for title in titles:
@@ -36,7 +35,7 @@ class Statistician:
             data = [place, name, won + lost, won, lost, "----", elo]
             if won + lost > 0:
                 data[5] = round(100 * won / (won + lost))
-            leaderboard_html += f'</tr><tr><td class="place">{data[0]}</td>'
+            leaderboard_html += f'</tr><tr><td>{data[0]}</td>'
             for ind in range(1, len(titles)):
                 mark = ""
                 if ind == 5:
