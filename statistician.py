@@ -17,8 +17,8 @@ class Statistician:
         <head>
         </head>
         <body>
-        <h1 class="text-center">Capture Network ELO rating</h1>
-        <div>
+        <h1 class="text-center px-5">Capture Network ELO rating</h1>
+        <div class="px-5">
           <table class="table table-dark table-hover">
             <tr>
         """
@@ -47,12 +47,22 @@ class Statistician:
         leaderboard_html += f"""
         </table>
         </div>
+        <div>
+        {Statistician.getLastGamesLinks()}
+        </div>
         {bootstrap_js}
         </body>
         </html>
         """
         with open('./history/leaderboard.html', 'w') as file:
             file.writelines(leaderboard_html)
+
+    @staticmethod
+    def getLastGamesLinks():
+        last_games = db().getLastGames(250)
+        links = [f"<a href=\"./games/{game[0]}/report.html\">{game[1]} vs {game[2]}</a></br>" for game in last_games]
+        return "\n".join(links)
+
 
     @staticmethod
     def generateHTMLs():
