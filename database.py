@@ -21,6 +21,23 @@ class Database:
             return row[0]
         return -1
 
+    def getLastGames(self, limit):
+        """
+        This method return data of :limit last saved games
+        @:param limit: limit of selected games id's
+        :return: list of games with details
+        """
+        query = f"""
+            SELECT GAMES.ID, FIRST_BOT.NAME, SECOND_BOT.NAME
+            FROM GAMES
+            JOIN BOTS AS FIRST_BOT ON FIRST_BOT.ID = GAMES.BOT_A
+            JOIN BOTS AS SECOND_BOT ON SECOND_BOT.ID = GAMES.BOT_B
+            ORDER BY GAMES.ID DESC
+            LIMIT {limit}
+        """
+        cursor = self.conn.execute(query)
+        return cursor.fetchall()
+
     def botExist(self, name):
         """
         Method check if bot with this name exist inside database
