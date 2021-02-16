@@ -19,7 +19,7 @@ class Mind:
         """
         self.__log = log_method
         self.__moves = ['NOP()', 'PATCH()', 'SCAN()', 'OVERLOAD()', 'OVERHEAR()', 'EXPLOIT()', 'INFECT()']
-        self.__my_name = f'RandBot'
+        self.__my_name = f'RandBot_{randrange(1,100)}'
         self.__my_move = ''
         self.__move_ok = False
 
