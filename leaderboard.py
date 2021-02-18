@@ -1,20 +1,21 @@
-"""@package statistician
-Package contains Statistician class used for generating all statistic data from battle.
+"""@package leaderboard
+Package contains LeaderBoard class used for generating leaderboard page with last games list.
 """
 import subprocess
 
 from database import Database as db
-from styles import bootstrap, bootstrap_js
 
 
-class Statistician:
+class LeaderBoard:
+    bootstrap = '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">'
+    bootstrap_js = '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>'
 
     @staticmethod
     def __generateLeaderboard():
         leaderboard_html = f"""
         <!DOCTYPE html>
         <html lang="en">
-        {bootstrap}
+        {LeaderBoard.bootstrap}
         <head>
         </head>
         <body>
@@ -58,12 +59,12 @@ class Statistician:
         </div>    
         <div class="container align-middle">
           <div id="lastGames" class="list-group">
-            {Statistician.getLastGamesLinks()}
+            {LeaderBoard.getLastGamesLinks()}
           </div>
         </div>  
-        {bootstrap_js}
+        {LeaderBoard.bootstrap_js}
         <script>
-        {Statistician.getJsScript()}
+        {LeaderBoard.getJsScript()}
         </script>
         </body>
         </html>
@@ -93,7 +94,7 @@ class Statistician:
     @staticmethod
     def getLastGamesLinks():
         last_games = db().getLastGames(250)
-        links = [Statistician.getListLinkItem(game) for game in last_games]
+        links = [LeaderBoard.getListLinkItem(game) for game in last_games]
         return "\n".join(links)
 
     @staticmethod
@@ -109,4 +110,4 @@ class Statistician:
               f"--output-dir ./history/games/{db().getLastGameID} --output report.html " \
               f"./history/insight.ipynb"
         subprocess.Popen(cmd)
-        Statistician.__generateLeaderboard()
+        LeaderBoard.__generateLeaderboard()
