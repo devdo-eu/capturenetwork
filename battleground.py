@@ -11,7 +11,7 @@ from enumeration import BotMessageField as bmf
 from enumeration import GamesListFileField as gff
 from enumeration import RoundAdvantage as ra
 from enumeration import RoundWinner as rw
-from statistician import Statistician
+from leaderboard import LeaderBoard
 from database import Database as db
 
 
@@ -71,7 +71,7 @@ class Battleground(threading.Thread):
             game_list.append(data)
             file.writelines(json.dumps(game_list, sort_keys=True, indent=4) + '\n')
 
-        Statistician.generateHTMLs()
+        LeaderBoard.generateHTMLs()
 
     def __saveToDatabase(self, data, full_record):
         """
