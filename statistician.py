@@ -2,6 +2,7 @@
 Package contains Statistician class used for generating all statistic data from battle.
 """
 import subprocess
+
 from database import Database as db
 from styles import bootstrap, bootstrap_js
 
@@ -47,10 +48,23 @@ class Statistician:
         leaderboard_html += f"""
         </table>
         </div>
-        <div>
-        {Statistician.getLastGamesLinks()}
-        </div>
+        <div class="container align-middle">
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1">Search bot</span>
+                </div>
+                <input type="text" class="form-control" id="searchInput" onkeyup="filter()" aria-describedby="basic-addon1">
+            </div>
+        </div>    
+        <div class="container align-middle">
+          <div id="lastGames" class="list-group">
+            {Statistician.getLastGamesLinks()}
+          </div>
+        </div>  
         {bootstrap_js}
+        <script>
+        {Statistician.getJsScript()}
+        </script>
         </body>
         </html>
         """
@@ -58,11 +72,36 @@ class Statistician:
             file.writelines(leaderboard_html)
 
     @staticmethod
+    def getJsScript():
+        return '''function filter() {
+          var input, filter, ul, links, a, i, txtValue;
+          input = document.getElementById('searchInput');
+          filter = input.value.toUpperCase();
+          ul = document.getElementById("lastGames");
+          links = ul.getElementsByTagName('a');
+        
+          for (i = 0; i < links.length; i++) {
+            a = links[i];
+            txtValue = a.textContent || a.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1)
+              links[i].style.display = "";
+            else
+              links[i].style.display = "none";
+          }
+        }'''
+
+    @staticmethod
     def getLastGamesLinks():
         last_games = db().getLastGames(250)
-        links = [f"<a href=\"./games/{game[0]}/report.html\">{game[1]} vs {game[2]}</a></br>" for game in last_games]
+        links = [Statistician.getListLinkItem(game) for game in last_games]
         return "\n".join(links)
 
+    @staticmethod
+    def getListLinkItem(game):
+        return f'<a href="./games/{game[0]}/report.html" ' \
+               f'class="list-group-item list-group-item-action text-center">' \
+               f'{game[1]} vs {game[2]}' \
+               f'</a>'
 
     @staticmethod
     def generateHTMLs():
