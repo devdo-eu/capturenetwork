@@ -38,10 +38,12 @@ also you need to know host and port to connect.
 
 Bot to work properly need Python > 3.6
 
-We have prepared a simple bot that performs random moves so that you can quickly 
-and easily check the operation of the server.</br>
-If you are looking for a real challenge take a look in AI 
-or playbot/example_with_logic directories where we have prepared more complex bots.
+We have prepared some bots so that you can quickly 
+and easily check the operation of the server.  
+If **two bots with the same name** participate in a match,  
+**this will result in incorrect stats being generated** after the clash.  
+
+**Bots participating in a match must have different `self.__my_name` at `mind.py`**
 ```batch
 .\capturenetwork\playbot>python playbot.py -h
 usage: playbot.py [-h] [--host HOST] [--port PORT]
