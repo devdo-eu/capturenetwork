@@ -16,7 +16,14 @@ This repository consists of three parts.
 
 ## Deployment
 
-To run Battle Server you need Python > 3.6
+To run Battle Server you need Python 3.8 with some dependencies.  
+The easiest way to do this is to install the [Miniconda](https://docs.conda.io/en/latest/miniconda.html) package.   
+Then, to install all necessary tools use:  
+`conda env create -f environment.yml` inside capturenetwork directory.  
+
+When the installation of the environment is complete type:  
+`conda activate capnet`  
+To switch to `capnet` environment with all tools installed.
 
 When prerequisites are met then open console prompt:
 
@@ -32,11 +39,11 @@ optional arguments:
 
 ![Run Battle.Server](./gifs/rPB8OKtbTh.gif)
 
-Battle Server must be up&ready to run bot,
- 
-also you need to know host and port to connect.
+Battle Server must be up&ready to run bot,  
+you need to know host and port to connect.
 
-Bot to work properly need Python > 3.6
+Bot also needs `capnet` environment to work properly.  
+So open another terminal, activate `capnet` and you are ready to go.
 
 We have prepared some bots so that you can quickly 
 and easily check the operation of the server.  
