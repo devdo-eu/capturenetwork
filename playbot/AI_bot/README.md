@@ -31,13 +31,16 @@ Inside this folder is bot powered by narrow AI.
  What dose it mean? It means that network was learning the game itself by playing
  
  ### How to run this thing?
- To run this bot you need to install keras, tensorflow and some other dependencies from `requirements.txt` file.
+ To run this bot you need to install keras, tensorflow and some other dependencies from `environment.yml` file.
  
  basically if you are using conda you can just type: 
  
- `conda create --name <env> --file requirements.txt`
+ `conda env create -f environment.yml`
  
- to create virtual environment with all libraries installed
+ to create virtual environment called `capnet` with all libraries installed.  
+To switch to newly created environment type:  
+
+`conda activate capnet`
  
  ### How good it plays the game?
  It plays pretty good. 
@@ -49,4 +52,4 @@ Inside this folder is bot powered by narrow AI.
  ### Closing word
  If you can beat this AI bot, I will be happy to hear the story.
  
- If you had some question - let me know and I will try to answer.
+ If you had some question - let me know - and I will try to answer.

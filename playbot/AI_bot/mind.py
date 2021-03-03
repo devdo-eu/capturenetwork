@@ -3,7 +3,7 @@ Package contains Mind class used as a logic module for PlayBot class
 """
 from json import JSONDecodeError, loads
 from keras.models import model_from_json
-from keras.optimizers import adam
+from keras.optimizers import Adam
 from collections import deque
 import numpy as np
 
@@ -38,7 +38,7 @@ class Mind:
         self.model = model_from_json(loaded_model_json)
         # load weights into new model
         self.model.load_weights(f'{agent}.h5')
-        self.model.compile(loss='mse', optimizer=adam(lr=10e-5))
+        self.model.compile(loss='mse', optimizer=Adam(lr=10e-5))
         print("Loaded and compiled model from disk")
         print(self.model.summary())
 
