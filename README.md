@@ -320,4 +320,4 @@ It is developed by [Paweł Polakiewicz](https://github.com/ppolakiewicz)
 
 MIT License
 
-Copyright (c) 2020 Grzegorz Maciaszek
+Copyright (c) 2020, 2021 Grzegorz Maciaszek

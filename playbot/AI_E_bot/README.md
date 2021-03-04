@@ -7,6 +7,22 @@ Inside this folder is bot powered by narrow AI.
 `network.md5` file contains all weight for network from json-file.
  
  ### Network Architecture Details
+```
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+dense_21 (InputLayer)        [(None, 108)]             0
+_________________________________________________________________
+dense_22 (Dense)             (None, 54)                5886
+_________________________________________________________________
+dense_23 (Dense)             (None, 54)                2970
+_________________________________________________________________
+dense_24 (Dense)             (None, 7)                 385
+=================================================================
+Total params: 9,241
+Trainable params: 9,241
+Non-trainable params: 0
+```
  Neural network of this bot has 4 layers: input(Dense), hidden(Dense), hidden(Dense), output(Dense)
  
  As you can see, all layers are basic `Dense` type.
@@ -30,26 +46,5 @@ Inside this folder is bot powered by narrow AI.
  
  What dose it mean? It means that network was learning the game itself by playing
  
- ### How to run this thing?
- To run this bot you need to install keras, tensorflow and some other dependencies from `environment.yml` file.
- 
- basically if you are using conda you can just type: 
- 
- `conda env create -f environment.yml`
- 
- to create virtual environment called `capnet` with all libraries installed.  
-To switch to newly created environment type:  
-
-`conda activate capnet`
- 
- ### How good it plays the game?
- It plays pretty good. 
- 
- I am sure it will take you some time to defeat it.
- 
- You should check yourself and try to beat it :)
- 
  ### Closing word
- If you can beat this AI bot, I will be happy to hear the story.
- 
  If you had some question - let me know - and I will try to answer.
