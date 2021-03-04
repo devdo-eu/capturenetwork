@@ -22,7 +22,7 @@ class Mind:
         """
         self.__log = log_method
         self.__moves = ['NOP()', 'PATCH()', 'SCAN()', 'OVERLOAD()', 'OVERHEAR()', 'EXPLOIT()', 'INFECT()']
-        self.__my_name = f'AI Network'
+        self.__my_name = f'AI E Network'
         self.__my_move = ''
         self.__move_ok = False
         self.model = []
