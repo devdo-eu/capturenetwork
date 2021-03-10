@@ -34,7 +34,7 @@ methodToPrize = {
         Method.NOP: 0
         }
 
-timeOfRound = 50  # milliseconds
+timeOfRound = 70  # milliseconds
 numberOfRounds = 600
 
 methodToMethodResult = {
