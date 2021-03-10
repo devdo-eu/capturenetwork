@@ -1,7 +1,9 @@
 # Capture The Network
-![Python application](https://github.com/devdo-eu/capturenetwork/workflows/Python%20application/badge.svg?branch=master)
+![Python Build](https://github.com/devdo-eu/capturenetwork/workflows/Python%20Build/badge.svg?branch=master)
+![Java Build](https://github.com/devdo-eu/capturenetwork/workflows/Java%20Build/badge.svg?branch=master)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/devdo-eu/capturenetwork.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/devdo-eu/capturenetwork/context:python)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/devdo-eu/capturenetwork.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/devdo-eu/capturenetwork/alerts/)
+![last-commit](https://img.shields.io/github/last-commit/devdo-eu/capturenetwork?style=plastic)
 
 ![Run Battle.Server](./gifs/hXAIkoQd6I.gif)
 
