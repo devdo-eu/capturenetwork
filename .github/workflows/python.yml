@@ -4,8 +4,9 @@
 name: Python Build
 
 on:
-  # push:
-    # branches: [ master ]
+  push:
+    branches: [ master ]
+    paths-ignore: 'playbot/java/*'
   pull_request:
     branches: [ master ]
     paths-ignore: 'playbot/java/*'
